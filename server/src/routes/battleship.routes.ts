@@ -12,6 +12,12 @@ battleshipRouter.use(requireAuth, requireCouple);
 
 type Rotation = 0 | 90 | 180 | 270;
 type Plane = { x?: number | null; y?: number | null; rotation?: number | null };
+type PlayerState = {
+  plane?: Plane | null;
+  planes?: Plane[];
+  ready?: boolean;
+  shots: Array<{ x: number; y: number; result: string; sunkShip?: string }>;
+};
 
 const BASE_PLANE: Array<{ x: number; y: number }> = [
   { x: 1, y: 0 },
@@ -44,6 +50,43 @@ function isValidPlane(plane: Plane): boolean {
   return cells.length === 8 && cells.every(({ x, y }) => x >= 1 && x <= 10 && y >= 1 && y <= 10);
 }
 
+function playerPlanes(player: PlayerState): Plane[] {
+  const planes = player.planes?.filter(isValidPlane) ?? [];
+  if (planes.length > 0) return planes;
+  return player.plane && isValidPlane(player.plane) ? [player.plane] : [];
+}
+
+function allPlaneCells(planes: Plane[]) {
+  return planes.flatMap((plane, planeIndex) => planeCells(plane).map((cell, cellIndex) => ({ ...cell, planeIndex, cellIndex })));
+}
+
+function hasOverlap(planes: Plane[]): boolean {
+  const occupied = new Set<string>();
+  for (const cell of allPlaneCells(planes)) {
+    const key = `${cell.x}:${cell.y}`;
+    if (occupied.has(key)) return true;
+    occupied.add(key);
+  }
+  return false;
+}
+
+function validPlaneSet(planes: Plane[], count: number): boolean {
+  return planes.length === count && planes.every(isValidPlane) && !hasOverlap(planes);
+}
+
+function resetBoard(game: any): void {
+  game.status = 'placement';
+  game.turn = null;
+  game.winner = null;
+  game.planeCountProposal = undefined;
+  for (const player of game.players) {
+    player.ready = false;
+    player.plane = undefined;
+    player.planes.splice(0, player.planes.length);
+    player.shots.splice(0, player.shots.length);
+  }
+}
+
 async function getGame(coupleId: string) {
   const couple = await Couple.findById(coupleId).select('members');
   let game = await BattleshipGame.findOne({ couple: coupleId });
@@ -64,16 +107,21 @@ async function getGame(coupleId: string) {
     }
   }
 
-  // Хуучин 5-усан-онгоцны идэвхтэй тоглолтыг шинэ дүрст онгоцны төлөв рүү цэвэр шилжүүлнэ.
-  if (game.status !== 'placement' && game.players.some((player) => !isValidPlane(player.plane ?? {}))) {
-    game.status = 'placement';
-    game.turn = null;
-    game.winner = null;
-    for (const player of game.players) {
-      player.ready = false;
-      player.plane = undefined;
-      player.shots.splice(0, player.shots.length);
+  if (!game.planeCount) {
+    game.planeCount = 1;
+    changed = true;
+  }
+
+  for (const player of game.players) {
+    if (player.planes.length === 0 && isValidPlane(player.plane ?? {})) {
+      player.planes.push(player.plane as never);
+      changed = true;
     }
+  }
+
+  // Хуучин 5-усан-онгоцны идэвхтэй тоглолтыг шинэ дүрст онгоцны төлөв рүү цэвэр шилжүүлнэ.
+  if (game.status !== 'placement' && game.players.some((player) => !validPlaneSet(playerPlanes(player), game.planeCount))) {
+    resetBoard(game);
     changed = true;
   }
   if (changed) await game.save();
@@ -84,20 +132,31 @@ function gamePayload(game: Awaited<ReturnType<typeof getGame>>, viewerId: string
   const me = game.players.find((player) => player.user.toString() === viewerId);
   const opponent = game.players.find((player) => player.user.toString() !== viewerId);
   if (!me || !opponent) throw new Error('Хоёр тоглогч бүрэн холбогдоогүй байна');
+  const myPlanes = playerPlanes(me);
+  const proposedBy = game.planeCountProposal?.proposedBy?.toString() ?? null;
+  const proposalApprovals = game.planeCountProposal?.approvals?.map((user) => user.toString()) ?? [];
+  const serializePlane = (plane: Plane) => ({
+    x: plane.x,
+    y: plane.y,
+    rotation: plane.rotation,
+    cells: planeCells(plane),
+  });
 
   return {
     id: game._id,
     status: game.status,
+    planeCount: game.planeCount,
+    planeCountProposal: proposedBy && game.planeCountProposal?.count ? {
+      count: game.planeCountProposal.count,
+      proposedBy,
+      approvals: proposalApprovals,
+    } : null,
     turnUserId: game.turn?.toString() ?? null,
     winnerUserId: game.winner?.toString() ?? null,
     me: {
       ready: me.ready,
-      plane: me.plane && isValidPlane(me.plane) ? {
-        x: me.plane.x,
-        y: me.plane.y,
-        rotation: me.plane.rotation,
-        cells: planeCells(me.plane),
-      } : null,
+      plane: myPlanes[0] ? serializePlane(myPlanes[0]) : null,
+      planes: myPlanes.map(serializePlane),
       incomingShots: opponent.shots.map(({ x, y, result, sunkShip }) => ({ x, y, result, sunkShip })),
     },
     opponent: {
@@ -120,6 +179,7 @@ const placementSchema = z.object({
   x: z.number().int().min(1).max(10),
   y: z.number().int().min(1).max(10),
   rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]),
+  index: z.number().int().min(0).max(4).optional(),
 });
 
 battleshipRouter.post('/place', asyncHandler(async (req, res) => {
@@ -130,11 +190,25 @@ battleshipRouter.post('/place', asyncHandler(async (req, res) => {
     res.status(409).json({ error: 'Одоо онгоц байрлуулах боломжгүй' });
     return;
   }
-  if (!isValidPlane(placement)) {
+  const candidate = { x: placement.x, y: placement.y, rotation: placement.rotation };
+  if (!isValidPlane(candidate)) {
     res.status(400).json({ error: 'Онгоц талбайгаас гарч байна. Дотогш байрлуулна уу' });
     return;
   }
-  player.plane = placement;
+  const planes = playerPlanes(player);
+  const index = placement.index ?? planes.length;
+  if (index >= game.planeCount) {
+    res.status(409).json({ error: 'Бүх онгоц байрласан байна' });
+    return;
+  }
+  const nextPlanes = [...planes];
+  nextPlanes[index] = candidate;
+  if (hasOverlap(nextPlanes)) {
+    res.status(400).json({ error: 'Онгоцууд давхцаж байна. Өөр нүд сонгоно уу' });
+    return;
+  }
+  player.planes.splice(0, player.planes.length, ...(nextPlanes as never[]));
+  player.plane = nextPlanes[0] as never;
   await game.save();
   res.json({ game: gamePayload(game, req.userId!) });
 }));
@@ -142,8 +216,8 @@ battleshipRouter.post('/place', asyncHandler(async (req, res) => {
 battleshipRouter.post('/ready', asyncHandler(async (req, res) => {
   const game = await getGame(req.coupleId!);
   const player = game.players.find((item) => item.user.toString() === req.userId);
-  if (!player || !isValidPlane(player.plane ?? {})) {
-    res.status(409).json({ error: 'Эхлээд онгоцоо талбайд байрлуулна уу' });
+  if (!player || !validPlaneSet(playerPlanes(player), game.planeCount)) {
+    res.status(409).json({ error: `Эхлээд ${game.planeCount} онгоцоо давхцуулахгүй байрлуулна уу` });
     return;
   }
   player.ready = true;
@@ -169,6 +243,64 @@ battleshipRouter.post('/unready', asyncHandler(async (req, res) => {
   res.json({ game: gamePayload(game, req.userId!) });
 }));
 
+const planeCountSchema = z.object({ count: z.number().int().min(1).max(5) });
+
+battleshipRouter.post('/plane-count/propose', asyncHandler(async (req, res) => {
+  const { count } = planeCountSchema.parse(req.body);
+  const game = await getGame(req.coupleId!);
+  if (!game.players.some((player) => player.user.toString() === req.userId)) {
+    res.status(403).json({ error: 'Тоглогч олдсонгүй' });
+    return;
+  }
+  if (count === game.planeCount) {
+    game.planeCountProposal = undefined;
+  } else {
+    game.planeCountProposal = {
+      count,
+      proposedBy: req.userId,
+      approvals: [req.userId],
+    } as never;
+  }
+  await game.save();
+  notifyChanged(req.coupleId!);
+  res.json({ game: gamePayload(game, req.userId!) });
+}));
+
+battleshipRouter.post('/plane-count/approve', asyncHandler(async (req, res) => {
+  const game = await getGame(req.coupleId!);
+  const proposal = game.planeCountProposal;
+  if (!proposal?.count || !proposal.proposedBy) {
+    res.status(409).json({ error: 'Идэвхтэй санал алга' });
+    return;
+  }
+  if (!game.players.some((player) => player.user.toString() === req.userId)) {
+    res.status(403).json({ error: 'Тоглогч олдсонгүй' });
+    return;
+  }
+  if (!proposal.approvals.some((user) => user.toString() === req.userId)) {
+    proposal.approvals.push(req.userId as never);
+  }
+  if (game.players.every((player) => proposal.approvals.some((user) => user.toString() === player.user.toString()))) {
+    game.planeCount = proposal.count;
+    game.planeCountProposal = undefined;
+    resetBoard(game);
+  }
+  await game.save();
+  notifyChanged(req.coupleId!);
+  res.json({ game: gamePayload(game, req.userId!) });
+}));
+
+battleshipRouter.post('/plane-count/cancel', asyncHandler(async (req, res) => {
+  const game = await getGame(req.coupleId!);
+  const proposal = game.planeCountProposal;
+  if (proposal?.proposedBy?.toString() === req.userId) {
+    game.planeCountProposal = undefined;
+  }
+  await game.save();
+  notifyChanged(req.coupleId!);
+  res.json({ game: gamePayload(game, req.userId!) });
+}));
+
 const fireSchema = z.object({ x: z.number().int().min(1).max(10), y: z.number().int().min(1).max(10) });
 
 battleshipRouter.post('/fire', asyncHandler(async (req, res) => {
@@ -185,19 +317,28 @@ battleshipRouter.post('/fire', asyncHandler(async (req, res) => {
     return;
   }
 
-  const targetCells = planeCells(defender.plane ?? {});
-  const hit = targetCells.some((cell) => cell.x === x && cell.y === y);
+  const defenderPlanes = playerPlanes(defender);
+  const targetCells = allPlaneCells(defenderPlanes);
+  const target = targetCells.find((cell) => cell.x === x && cell.y === y);
+  const hit = Boolean(target);
   // BASE_PLANE-ийн эхний нүд нь онгоцны хамар; эргэхэд дараалал хадгалагдана.
-  const head = targetCells[0];
-  const hitHead = Boolean(head && head.x === x && head.y === y);
+  const hitHead = Boolean(target && target.cellIndex === 0);
   attacker.shots.push({
     x,
     y,
     result: hitHead ? 'head' : hit ? 'hit' : 'miss',
-    sunkShip: hitHead ? 'plane' : '',
+    sunkShip: hitHead && target ? `plane-${target.planeIndex + 1}` : '',
   });
 
-  if (hitHead) {
+  const hitPlaneIndexes = new Set(
+    attacker.shots
+      .filter((shot) => shot.result === 'head')
+      .map((shot) => {
+        const match = /^plane-(\d+)$/.exec(shot.sunkShip ?? '');
+        return match ? Number(match[1]) - 1 : 0;
+      }),
+  );
+  if (hitHead && hitPlaneIndexes.size >= defenderPlanes.length) {
     game.status = 'finished';
     game.winner = attacker.user;
     game.turn = null;
@@ -215,14 +356,7 @@ battleshipRouter.post('/reset', asyncHandler(async (req, res) => {
     res.status(403).json({ error: 'Тоглогч олдсонгүй' });
     return;
   }
-  game.status = 'placement';
-  game.turn = null;
-  game.winner = null;
-  for (const player of game.players) {
-    player.ready = false;
-    player.plane = undefined;
-    player.shots.splice(0, player.shots.length);
-  }
+  resetBoard(game);
   await game.save();
   notifyChanged(req.coupleId!);
   res.json({ game: gamePayload(game, req.userId!) });

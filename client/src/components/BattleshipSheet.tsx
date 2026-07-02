@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Check, Crosshair, Grid3X3, RefreshCw, RotateCw, Trophy, X } from 'lucide-react';
+import { Check, Crosshair, Grid3X3, Minus, Plus, RefreshCw, RotateCw, Trophy, X } from 'lucide-react';
 import { useToast } from './Toast';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
@@ -102,6 +102,8 @@ export default function BattleshipSheet({ open, onClose }: Props) {
   const [view, setView] = useState<'target' | 'mine'>('target');
   const [selected, setSelected] = useState<Cell | null>(null);
   const [rotation, setRotation] = useState<Rotation>(0);
+  const [selectedPlaneIndex, setSelectedPlaneIndex] = useState<number | null>(null);
+  const [proposedCount, setProposedCount] = useState(1);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
@@ -111,7 +113,8 @@ export default function BattleshipSheet({ open, onClose }: Props) {
     try {
       const result = await api<{ game: BattleshipGame }>('/battleship');
       setGame(result.game);
-      if (result.game.me.plane) setRotation(result.game.me.plane.rotation);
+      setProposedCount(result.game.planeCount);
+      if (result.game.me.planes[0]) setRotation(result.game.me.planes[0].rotation);
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Тоглоомыг уншихад алдаа гарлаа');
     } finally { setLoading(false); }
@@ -139,6 +142,7 @@ export default function BattleshipSheet({ open, onClose }: Props) {
       });
       setGame(result.game);
       setSelected(null);
+      setProposedCount(result.game.planeCount);
       return result.game;
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Үйлдэл амжилтгүй боллоо');
@@ -151,7 +155,8 @@ export default function BattleshipSheet({ open, onClose }: Props) {
     const height = rotation % 180 === 0 ? 4 : 3;
     const x = Math.max(1, Math.min(11 - width, cell.x - Math.floor(width / 2)));
     const y = Math.max(1, Math.min(11 - height, cell.y - Math.floor(height / 2)));
-    await post('/place', { x, y, rotation });
+    await post('/place', { x, y, rotation, index: selectedPlaneIndex ?? game?.me.planes.length ?? 0 });
+    setSelectedPlaneIndex(null);
   }
 
   async function fire() {
@@ -162,7 +167,24 @@ export default function BattleshipSheet({ open, onClose }: Props) {
     if (shot) toast(shot.result === 'miss' ? 'Оносонгүй' : shot.result === 'head' ? 'Онгоцны толгойг онолоо — та яллаа!' : shot.result === 'sunk' ? 'Онгоц бүрэн сөнөлөө!' : 'Оносон!');
   }
 
+  async function proposePlaneCount() {
+    await post('/plane-count/propose', { count: proposedCount });
+  }
+
+  async function approvePlaneCount() {
+    await post('/plane-count/approve');
+  }
+
+  async function cancelPlaneCount() {
+    await post('/plane-count/cancel');
+  }
+
   const myTurn = game?.status === 'playing' && game.turnUserId === user?.id;
+  const placedCount = game?.me.planes.length ?? 0;
+  const proposal = game?.planeCountProposal;
+  const proposalByMe = Boolean(proposal && user?.id && proposal.proposedBy === user.id);
+  const proposalApprovedByMe = Boolean(proposal && user?.id && proposal.approvals.includes(user.id));
+  const canReady = Boolean(game && game.me.planes.length === game.planeCount);
   if (!open) return null;
 
   return (
@@ -197,11 +219,48 @@ export default function BattleshipSheet({ open, onClose }: Props) {
           <div>
             <p className="mb-2 text-center text-sm font-medium text-deep">Онгоцоо талбай дээр байрлуул</p>
             <p className="mb-3 text-center text-xs text-muted">Онгоцны төв байрлах нүдээ дарна · X нь онгоцны хэсэг</p>
+            <div className="mb-3 rounded-xl border border-blush/70 bg-white p-4">
+              <div className="text-sm font-semibold text-deep">Онгоцны тоо</div>
+              <div className="mt-1 text-xs text-muted">Нөгөө хүн зөвшөөрвөл тоглоом шинэ тоогоор эхэлнэ.</div>
+              <div className="mt-3 flex items-center gap-2">
+                <button type="button" onClick={() => setProposedCount((value) => Math.max(1, value - 1))} disabled={busy || proposedCount <= 1} className="flex h-10 w-10 items-center justify-center rounded-xl bg-warm text-deep disabled:opacity-50" aria-label="Бууруулах"><Minus size={16} /></button>
+                <div className="min-w-10 text-center text-xl font-bold text-deep">{proposedCount}</div>
+                <button type="button" onClick={() => setProposedCount((value) => Math.min(5, value + 1))} disabled={busy || proposedCount >= 5} className="flex h-10 w-10 items-center justify-center rounded-xl bg-warm text-deep disabled:opacity-50" aria-label="Нэмэх"><Plus size={16} /></button>
+                <button type="button" onClick={() => void proposePlaneCount()} disabled={busy || proposedCount === game.planeCount} className="ml-auto rounded-xl border border-rose/40 px-3 py-2 text-xs font-semibold text-rose disabled:opacity-50">Санал болгох</button>
+              </div>
+              {proposal ? (
+                <div className="mt-3 rounded-xl bg-warm px-4 py-3 text-sm text-deep">
+                  <div className="font-semibold">Шинэ тоглоомын санал</div>
+                  <div className="mt-1 text-xs text-muted">
+                    {proposalByMe ? `${proposal.count} онгоцтой болгох саналыг зөвшөөрөхийг хүлээж байна.` : `${partner?.name ?? 'Partner'} ${proposal.count} онгоцтой болгох санал илгээсэн.`}
+                  </div>
+                  <div className="mt-3">
+                    {proposalByMe ? (
+                      <button type="button" onClick={() => void cancelPlaneCount()} disabled={busy} className="w-full rounded-xl border border-rose/40 py-3 text-sm font-semibold text-rose disabled:opacity-50">Санал цуцлах</button>
+                    ) : (
+                      <button type="button" onClick={() => void approvePlaneCount()} disabled={busy || proposalApprovedByMe} className="w-full rounded-xl bg-rose py-3 text-sm font-semibold text-white disabled:opacity-50">Зөвшөөрөх</button>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              {game.me.planes.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {game.me.planes.map((plane, index) => (
+                    <button key={index} type="button" onClick={() => { setSelectedPlaneIndex(index); setRotation(plane.rotation); }} disabled={busy || game.me.ready} className={`rounded-xl border px-3 py-2 text-xs font-semibold ${selectedPlaneIndex === index ? 'border-rose bg-rose text-white' : 'border-blush text-deep'} disabled:opacity-50`}>
+                      #{index + 1}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              <div className="mt-3 text-center text-xs text-muted">
+                {selectedPlaneIndex !== null ? `${selectedPlaneIndex + 1}-р онгоцыг сольж байрлуулна` : canReady ? `${placedCount}/${game.planeCount} байрласан` : `${placedCount + 1}-р онгоцыг байрлуулна`}
+              </div>
+            </div>
             <PlanePreview rotation={rotation} />
             <BattleBoard
-              planeCells={game.me.plane?.cells}
+              planeCells={game.me.planes.flatMap((plane) => plane.cells)}
               shots={game.me.incomingShots}
-              interactive={!busy && !game.me.ready}
+              interactive={!busy && !game.me.ready && (game.me.planes.length < game.planeCount || selectedPlaneIndex !== null)}
               onSelect={(cell) => void place(cell)}
             />
             <div className="mt-4 flex gap-2.5">
@@ -216,7 +275,7 @@ export default function BattleshipSheet({ open, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => void post(game.me.ready ? '/unready' : '/ready')}
-                disabled={busy || (!game.me.ready && !game.me.plane)}
+                disabled={busy || (!game.me.ready && !canReady)}
                 className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium disabled:opacity-50 ${game.me.ready ? 'border border-blush bg-white text-deep' : 'bg-rose text-white'}`}
               >
                 <Check size={17} /> {game.me.ready ? 'Бэлэн цуцлах' : 'Бэлэн болох'}
@@ -236,7 +295,7 @@ export default function BattleshipSheet({ open, onClose }: Props) {
             {view === 'target' ? (
               <BattleBoard shots={game.opponent.shots} selected={selected} interactive={myTurn && !busy} onSelect={setSelected} />
             ) : (
-              <BattleBoard planeCells={game.me.plane?.cells} shots={game.me.incomingShots} />
+              <BattleBoard planeCells={game.me.planes.flatMap((plane) => plane.cells)} shots={game.me.incomingShots} />
             )}
             {game.status === 'playing' && view === 'target' && selected && (
               <button type="button" onClick={() => void fire()} disabled={busy} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-rose py-3 text-sm font-medium text-white disabled:opacity-60"><Crosshair size={17} /> {selected.y}-р мөр, {selected.x}-р багана руу буудах</button>

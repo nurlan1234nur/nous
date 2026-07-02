@@ -36,6 +36,8 @@ export function BattleshipSection() {
   const [view, setView] = useState<'target' | 'mine'>('target');
   const [selected, setSelected] = useState<Cell | null>(null);
   const [rotation, setRotation] = useState<Rotation>(0);
+  const [selectedPlaneIndex, setSelectedPlaneIndex] = useState<number | null>(null);
+  const [proposedCount, setProposedCount] = useState(1);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -46,7 +48,8 @@ export function BattleshipSection() {
     try {
       const response = await api<{ game: BattleshipGame }>('/battleship');
       setGame(response.game);
-      if (response.game.me.plane) setRotation(response.game.me.plane.rotation);
+      setProposedCount(response.game.planeCount);
+      if (response.game.me.planes[0]) setRotation(response.game.me.planes[0].rotation);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Тоглоомыг уншихад алдаа гарлаа');
     } finally {
@@ -86,6 +89,7 @@ export function BattleshipSection() {
       });
       setGame(response.game);
       setSelected(null);
+      setProposedCount(response.game.planeCount);
       return response.game;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Үйлдэл амжилтгүй боллоо');
@@ -100,7 +104,9 @@ export function BattleshipSection() {
     const height = rotation % 180 === 0 ? 4 : 3;
     const x = Math.max(1, Math.min(11 - width, cell.x - Math.floor(width / 2)));
     const y = Math.max(1, Math.min(11 - height, cell.y - Math.floor(height / 2)));
-    await post('/place', { x, y, rotation });
+    const index = selectedPlaneIndex ?? game?.me.planes.length ?? 0;
+    const updated = await post('/place', { x, y, rotation, index });
+    if (updated) setSelectedPlaneIndex(null);
   }
 
   async function fire() {
@@ -115,6 +121,18 @@ export function BattleshipSection() {
     ]);
   }
 
+  async function proposePlaneCount() {
+    await post('/plane-count/propose', { count: proposedCount });
+  }
+
+  async function approvePlaneCount() {
+    await post('/plane-count/approve');
+  }
+
+  async function cancelPlaneCount() {
+    await post('/plane-count/cancel');
+  }
+
   function closeGame() {
     Alert.alert('Тоглоомоос гарах уу?', 'Таны байрлал болон тоглолтын явц хадгалагдана.', [
       { text: 'Үгүй', style: 'cancel' },
@@ -123,6 +141,13 @@ export function BattleshipSection() {
   }
 
   const myTurn = game?.status === 'playing' && game.turnUserId === user?.id;
+  const placedCount = game?.me.planes.length ?? 0;
+  const placementIndex = selectedPlaneIndex ?? placedCount;
+  const canPlaceMore = Boolean(game && placedCount < game.planeCount);
+  const canReady = Boolean(game && game.me.planes.length === game.planeCount);
+  const proposal = game?.planeCountProposal;
+  const proposalByMe = Boolean(proposal && user?.id && proposal.proposedBy === user.id);
+  const proposalApprovedByMe = Boolean(proposal && user?.id && proposal.approvals.includes(user.id));
 
   return (
     <>
@@ -162,20 +187,64 @@ export function BattleshipSection() {
               <>
                 <View style={styles.card}>
                   <Text style={styles.cardTitle}>Онгоцоо байрлуул</Text>
-                  <Text style={styles.cardSub}>Талбай дээр дарж байрлуулаад, хэрэгтэй бол эргүүлнэ.</Text>
+                  <Text style={styles.cardSub}>Нийт {game.planeCount} онгоцноос {placedCount} нь байрласан. Талбай дээр дарж дараагийн онгоцоо байрлуулна.</Text>
                   <PlanePreview rotation={rotation} />
                 </View>
+                <View style={styles.card}>
+                  <Text style={styles.cardTitle}>Онгоцны тоо</Text>
+                  <Text style={styles.cardSub}>Тоог өөрчлөхөд нөгөө хүн зөвшөөрвөл тоглоом шинэ тоогоор эхэлнэ.</Text>
+                  <View style={styles.counterRow}>
+                    <Pressable disabled={busy || proposedCount <= 1} onPress={() => setProposedCount((value) => Math.max(1, value - 1))} style={[styles.counterButton, (busy || proposedCount <= 1) && styles.disabled]}>
+                      <Text style={styles.counterText}>-</Text>
+                    </Pressable>
+                    <Text style={styles.counterValue}>{proposedCount}</Text>
+                    <Pressable disabled={busy || proposedCount >= 5} onPress={() => setProposedCount((value) => Math.min(5, value + 1))} style={[styles.counterButton, (busy || proposedCount >= 5) && styles.disabled]}>
+                      <Text style={styles.counterText}>+</Text>
+                    </Pressable>
+                    <Pressable disabled={busy || proposedCount === game.planeCount} onPress={proposePlaneCount} style={[styles.proposeButton, (busy || proposedCount === game.planeCount) && styles.disabled]}>
+                      <Text style={styles.proposeText}>Санал болгох</Text>
+                    </Pressable>
+                  </View>
+                  {proposal ? (
+                    <View style={styles.proposalBox}>
+                      <Text style={styles.cardSub}>
+                        {proposalByMe ? `${proposal.count} онгоцтой болгох саналыг зөвшөөрөхийг хүлээж байна.` : `${partner?.name ?? 'Partner'} ${proposal.count} онгоцтой болгох санал илгээсэн.`}
+                      </Text>
+                      {proposalByMe ? (
+                        <Pressable disabled={busy} onPress={cancelPlaneCount} style={styles.secondaryFullButton}>
+                          <Text style={styles.secondaryText}>Санал цуцлах</Text>
+                        </Pressable>
+                      ) : (
+                        <Pressable disabled={busy || proposalApprovedByMe} onPress={approvePlaneCount} style={[styles.primaryFullButton, (busy || proposalApprovedByMe) && styles.disabled]}>
+                          <Text style={styles.primaryText}>Зөвшөөрөх</Text>
+                        </Pressable>
+                      )}
+                    </View>
+                  ) : null}
+                </View>
+                {game.me.planes.length > 0 ? (
+                  <View style={styles.planeList}>
+                    {game.me.planes.map((plane, index) => (
+                      <Pressable key={index} disabled={busy || game.me.ready} onPress={() => { setSelectedPlaneIndex(index); setRotation(plane.rotation); }} style={[styles.planeChip, selectedPlaneIndex === index && styles.planeChipActive]}>
+                        <Text style={[styles.planeChipText, selectedPlaneIndex === index && styles.planeChipActiveText]}>#{index + 1}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                ) : null}
                 <BattleBoard
-                  interactive={!busy && !game.me.ready}
+                  interactive={!busy && !game.me.ready && (canPlaceMore || selectedPlaneIndex !== null)}
                   onSelect={(cell) => void place(cell)}
-                  planeCells={game.me.plane?.cells}
+                  planeCells={game.me.planes.flatMap((plane) => plane.cells)}
                   shots={game.me.incomingShots}
                 />
+                <Text style={styles.waiting}>
+                  {selectedPlaneIndex !== null ? `${selectedPlaneIndex + 1}-р онгоцыг сольж байрлуулна` : canPlaceMore ? `${placementIndex + 1}-р онгоцыг байрлуулна` : 'Бүх онгоц байрласан'}
+                </Text>
                 <View style={styles.actionRow}>
                   <Pressable disabled={busy || game.me.ready} onPress={() => setRotation((current) => ((current + 90) % 360) as Rotation)} style={[styles.secondaryButton, (busy || game.me.ready) && styles.disabled]}>
                     <Text style={styles.secondaryText}>Эргүүлэх {rotation}°</Text>
                   </Pressable>
-                  <Pressable disabled={busy || (!game.me.ready && !game.me.plane)} onPress={() => void post(game.me.ready ? '/unready' : '/ready')} style={[styles.primaryButton, (busy || (!game.me.ready && !game.me.plane)) && styles.disabled]}>
+                  <Pressable disabled={busy || (!game.me.ready && !canReady)} onPress={() => void post(game.me.ready ? '/unready' : '/ready')} style={[styles.primaryButton, (busy || (!game.me.ready && !canReady)) && styles.disabled]}>
                     <Text style={styles.primaryText}>{game.me.ready ? 'Бэлэн цуцлах' : 'Бэлэн болох'}</Text>
                   </Pressable>
                 </View>
@@ -199,7 +268,7 @@ export function BattleshipSection() {
                 {view === 'target' ? (
                   <BattleBoard interactive={myTurn && !busy} onSelect={setSelected} selected={selected} shots={game.opponent.shots} />
                 ) : (
-                  <BattleBoard planeCells={game.me.plane?.cells} shots={game.me.incomingShots} />
+                  <BattleBoard planeCells={game.me.planes.flatMap((plane) => plane.cells)} shots={game.me.incomingShots} />
                 )}
                 {game.status === 'playing' && view === 'target' && selected ? (
                   <Pressable disabled={busy} onPress={fire} style={[styles.fireButton, busy && styles.disabled]}>
@@ -277,6 +346,20 @@ const styles = StyleSheet.create({
   card: { backgroundColor: '#fff8f5', borderColor: '#f5c6ce', borderRadius: 18, borderWidth: 1, marginBottom: 14, padding: 14 },
   cardTitle: { color: '#2d1f2e', fontSize: 16, fontWeight: '900' },
   cardSub: { color: '#9b8a93', fontSize: 13, lineHeight: 18, marginTop: 3 },
+  counterRow: { alignItems: 'center', flexDirection: 'row', gap: 8, marginTop: 12 },
+  counterButton: { alignItems: 'center', backgroundColor: '#f9ede6', borderRadius: 12, height: 40, justifyContent: 'center', width: 40 },
+  counterText: { color: '#e8607a', fontSize: 22, fontWeight: '900' },
+  counterValue: { color: '#2d1f2e', fontSize: 20, fontWeight: '900', minWidth: 26, textAlign: 'center' },
+  proposeButton: { alignItems: 'center', borderColor: '#e8607a', borderRadius: 12, borderWidth: 1, flex: 1, height: 40, justifyContent: 'center' },
+  proposeText: { color: '#e8607a', fontSize: 13, fontWeight: '900' },
+  proposalBox: { backgroundColor: '#f9ede6', borderRadius: 14, gap: 10, marginTop: 12, padding: 12 },
+  primaryFullButton: { alignItems: 'center', backgroundColor: '#e8607a', borderRadius: 12, minHeight: 44, justifyContent: 'center' },
+  secondaryFullButton: { alignItems: 'center', borderColor: '#e8607a', borderRadius: 12, borderWidth: 1, minHeight: 44, justifyContent: 'center' },
+  planeList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  planeChip: { backgroundColor: '#fff8f5', borderColor: '#f5c6ce', borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
+  planeChipActive: { backgroundColor: '#e8607a', borderColor: '#e8607a' },
+  planeChipText: { color: '#9b8a93', fontSize: 13, fontWeight: '900' },
+  planeChipActiveText: { color: '#fff' },
   previewGrid: { alignSelf: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: 2, marginTop: 12 },
   previewCell: { backgroundColor: '#f9ede6', borderRadius: 4, color: '#fff', height: 20, lineHeight: 20, overflow: 'hidden', textAlign: 'center', width: 20 },
   previewFilled: { backgroundColor: '#2d1f2e' },

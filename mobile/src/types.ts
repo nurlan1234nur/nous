@@ -198,11 +198,14 @@ export interface BattleshipShot {
 export interface BattleshipGame {
   id: string;
   status: 'placement' | 'playing' | 'finished';
+  planeCount: number;
+  planeCountProposal: { count: number; proposedBy: string; approvals: string[] } | null;
   turnUserId: string | null;
   winnerUserId: string | null;
   me: {
     ready: boolean;
     plane: { x: number; y: number; rotation: 0 | 90 | 180 | 270; cells: Array<{ x: number; y: number }> } | null;
+    planes: Array<{ x: number; y: number; rotation: 0 | 90 | 180 | 270; cells: Array<{ x: number; y: number }> }>;
     incomingShots: BattleshipShot[];
   };
   opponent: {
