@@ -10,6 +10,7 @@ services:
       - PORT=4000
       - CLIENT_ORIGIN=${CLIENT_ORIGIN:-http://localhost:8080}  # серверийн public origin (CORS/socket)
     expose:
+    
       - "4000"
     volumes:
       - uploads:/app/uploads   # upload хийсэн зураг container rebuild хийсэн ч хадгалагдана

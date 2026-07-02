@@ -211,8 +211,8 @@ battleshipRouter.post('/fire', asyncHandler(async (req, res) => {
 
 battleshipRouter.post('/reset', asyncHandler(async (req, res) => {
   const game = await getGame(req.coupleId!);
-  if (game.status !== 'finished') {
-    res.status(409).json({ error: 'Одоогийн тоглоом дуусаагүй байна' });
+  if (!game.players.some((player) => player.user.toString() === req.userId)) {
+    res.status(403).json({ error: 'Тоглогч олдсонгүй' });
     return;
   }
   game.status = 'placement';

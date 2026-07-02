@@ -172,14 +172,25 @@ export default function BattleshipSheet({ open, onClose }: Props) {
           <div className="text-lg font-semibold text-deep">Онгоц буудах</div>
           <div className="text-[11px] text-muted">Толгойг нь оновол ялна</div>
         </div>
-        <button
-          type="button"
-          onClick={() => setConfirmExit(true)}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-warm text-deep"
-          aria-label="Тоглоомоос гарах"
-        >
-          <X size={20} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void post('/reset')}
+            disabled={busy || loading || !game}
+            className="flex h-10 items-center gap-1.5 rounded-xl border border-rose/40 px-3 text-xs font-semibold text-rose disabled:opacity-50"
+            title="Шинэ тоглоом"
+          >
+            <RefreshCw size={15} /> Шинэ
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmExit(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-warm text-deep"
+            aria-label="Тоглоомоос гарах"
+          >
+            <X size={20} />
+          </button>
+        </div>
       </header>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-8 pt-4">
         {loading || !game ? <p className="py-12 text-center text-sm text-muted">Уншиж байна…</p> : game.status === 'placement' ? (

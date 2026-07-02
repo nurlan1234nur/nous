@@ -1,4 +1,6 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useFonts } from 'expo-font';
+import { PlayfairDisplay_600SemiBold_Italic } from '@expo-google-fonts/playfair-display';
 import { CoupleProvider } from './context/CoupleContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MainTabs } from './navigation/MainTabs';
@@ -7,11 +9,14 @@ import { CoupleSetupScreen } from './screens/CoupleSetupScreen';
 
 function AppContent() {
   const { user, loading } = useAuth();
+  const [fontsLoaded] = useFonts({
+    PlayfairDisplay_600SemiBold_Italic,
+  });
 
-  if (loading) {
+  if (loading || !fontsLoaded) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#df5c78" size="large" />
+        <ActivityIndicator color="#e8607a" size="large" />
       </View>
     );
   }
@@ -37,7 +42,7 @@ export function AppShell() {
 const styles = StyleSheet.create({
   loading: {
     alignItems: 'center',
-    backgroundColor: '#fff8f7',
+    backgroundColor: '#fdf6f0',
     flex: 1,
     justifyContent: 'center',
   },

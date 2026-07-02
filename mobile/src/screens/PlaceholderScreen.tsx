@@ -16,18 +16,18 @@ export function PlaceholderScreen({ title, description }: PlaceholderScreenProps
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: '#fff8f7',
+    backgroundColor: '#fdf6f0',
     flex: 1,
     padding: 24,
     paddingTop: 72,
   },
   title: {
-    color: '#3b2f2f',
+    color: '#2d1f2e',
     fontSize: 30,
     fontWeight: '800',
   },
   description: {
-    color: '#7c5f5f',
+    color: '#9b8a93',
     fontSize: 15,
     lineHeight: 22,
     marginTop: 8,

@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ChatScreen } from '../screens/ChatScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { MemoriesScreen } from '../screens/MemoriesScreen';
 import { MoreScreen } from '../screens/MoreScreen';
-import { PlaceholderScreen } from '../screens/PlaceholderScreen';
+import { TimelineScreen } from '../screens/TimelineScreen';
 
 type TabKey = 'home' | 'timeline' | 'memories' | 'chat' | 'more';
 
 const tabs: Array<{ key: TabKey; label: string; icon: string }> = [
-  { key: 'home', label: 'Home', icon: '⌂' },
-  { key: 'timeline', label: 'Timeline', icon: '◇' },
-  { key: 'memories', label: 'Memories', icon: '□' },
-  { key: 'chat', label: 'Chat', icon: '✉' },
-  { key: 'more', label: 'More', icon: '⋯' },
+  { key: 'home', label: 'Home', icon: '\u2302' },
+  { key: 'timeline', label: 'Timeline', icon: '\u25c7' },
+  { key: 'memories', label: 'Memories', icon: '\u25a1' },
+  { key: 'chat', label: 'Chat', icon: '\u2709' },
+  { key: 'more', label: 'More', icon: '\u22ef' },
 ];
 
 function renderScreen(tab: TabKey) {
@@ -19,11 +21,11 @@ function renderScreen(tab: TabKey) {
     case 'home':
       return <HomeScreen />;
     case 'timeline':
-      return <PlaceholderScreen title="Timeline" description="Daily story and history will be migrated here." />;
+      return <TimelineScreen />;
     case 'memories':
-      return <PlaceholderScreen title="Memories" description="Moments, photos, and shared media will be migrated here." />;
+      return <MemoriesScreen />;
     case 'chat':
-      return <PlaceholderScreen title="Chat" description="Realtime messages and socket connection will be migrated here next." />;
+      return <ChatScreen />;
     case 'more':
       return <MoreScreen />;
   }
@@ -44,11 +46,7 @@ export function MainTabs() {
               accessibilityState={{ selected: active }}
               key={tab.key}
               onPress={() => setActiveTab(tab.key)}
-              style={({ pressed }) => [
-                styles.tab,
-                active && styles.activeTab,
-                pressed && styles.pressed,
-              ]}
+              style={({ pressed }) => [styles.tab, active && styles.activeTab, pressed && styles.pressed]}
             >
               <Text style={[styles.icon, active && styles.activeText]}>{tab.icon}</Text>
               <Text style={[styles.label, active && styles.activeText]}>{tab.label}</Text>
@@ -62,7 +60,7 @@ export function MainTabs() {
 
 const styles = StyleSheet.create({
   shell: {
-    backgroundColor: '#fff8f7',
+    backgroundColor: '#fdf6f0',
     flex: 1,
   },
   content: {
@@ -70,41 +68,49 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     alignItems: 'center',
-    backgroundColor: '#fffdfb',
-    borderColor: '#f3d3d7',
-    borderTopWidth: 1,
+    backgroundColor: '#fff8f5',
+    borderColor: '#f5c6ce',
+    borderWidth: 1,
+    borderRadius: 24,
     flexDirection: 'row',
-    minHeight: 76,
-    paddingBottom: 8,
+    marginBottom: 12,
+    marginHorizontal: 12,
+    minHeight: 68,
+    paddingBottom: 6,
     paddingHorizontal: 8,
-    paddingTop: 8,
+    paddingTop: 6,
+    shadowColor: '#2d1f2e',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 8,
   },
   tab: {
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: 14,
     flex: 1,
     gap: 2,
     justifyContent: 'center',
     minHeight: 54,
   },
   activeTab: {
-    backgroundColor: '#fdecef',
+    backgroundColor: '#f9ede6',
   },
   pressed: {
     opacity: 0.8,
   },
   icon: {
-    color: '#9a7b7b',
-    fontSize: 21,
-    fontWeight: '800',
-    lineHeight: 23,
+    color: '#9b8a93',
+    fontSize: 22,
+    fontWeight: '900',
+    lineHeight: 24,
   },
   label: {
-    color: '#9a7b7b',
+    color: '#9b8a93',
     fontSize: 11,
     fontWeight: '700',
   },
   activeText: {
-    color: '#df5c78',
+    color: '#e8607a',
   },
 });

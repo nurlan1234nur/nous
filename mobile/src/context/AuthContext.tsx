@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { api } from '../lib/api';
+import { disconnectSocket } from '../lib/socket';
 import { clearToken, getToken, setToken } from '../lib/tokenStorage';
 import type { User } from '../types';
 
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    disconnectSocket();
     await clearToken();
     setUser(null);
   }
@@ -67,4 +69,3 @@ export function useAuth(): AuthState {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-

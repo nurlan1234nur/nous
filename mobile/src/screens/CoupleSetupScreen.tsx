@@ -94,7 +94,7 @@ export function CoupleSetupScreen() {
               maxLength={12}
               onChangeText={(value) => setInviteCode(value.toUpperCase())}
               placeholder="Invite code"
-              placeholderTextColor="#9a7b7b"
+              placeholderTextColor="#9b8a93"
               style={styles.input}
               value={inviteCode}
             />
@@ -125,7 +125,7 @@ export function CoupleSetupScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#fff8f7',
+    backgroundColor: '#fdf6f0',
     justifyContent: 'center',
     padding: 24,
   },
@@ -133,13 +133,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    color: '#3b2f2f',
+    color: '#2d1f2e',
     fontSize: 30,
     fontWeight: '800',
     textAlign: 'center',
   },
   subtitle: {
-    color: '#7c5f5f',
+    color: '#9b8a93',
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 12,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: 'center',
-    backgroundColor: '#df5c78',
+    backgroundColor: '#e8607a',
     borderRadius: 12,
     minHeight: 50,
     justifyContent: 'center',
@@ -164,21 +164,21 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   divider: {
-    backgroundColor: '#f0c8cf',
+    backgroundColor: '#f5c6ce',
     flex: 1,
     height: 1,
   },
   dividerText: {
-    color: '#9a7b7b',
+    color: '#9b8a93',
     fontSize: 12,
     textTransform: 'uppercase',
   },
   input: {
     backgroundColor: '#fff',
-    borderColor: '#f0c8cf',
+    borderColor: '#f5c6ce',
     borderRadius: 12,
     borderWidth: 1,
-    color: '#3b2f2f',
+    color: '#2d1f2e',
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: 2,
@@ -188,39 +188,39 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     alignItems: 'center',
-    borderColor: '#df5c78',
+    borderColor: '#e8607a',
     borderRadius: 12,
     borderWidth: 1,
     minHeight: 50,
     justifyContent: 'center',
   },
   secondaryText: {
-    color: '#df5c78',
+    color: '#e8607a',
     fontSize: 16,
     fontWeight: '700',
   },
   inviteBox: {
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderColor: '#f3d3d7',
+    borderColor: '#f5c6ce',
     borderRadius: 12,
     borderWidth: 1,
     padding: 18,
   },
   label: {
-    color: '#9a7b7b',
+    color: '#9b8a93',
     fontSize: 12,
     textTransform: 'uppercase',
   },
   code: {
-    color: '#df5c78',
+    color: '#e8607a',
     fontSize: 36,
     fontWeight: '900',
     letterSpacing: 4,
     marginTop: 6,
   },
   help: {
-    color: '#7c5f5f',
+    color: '#9b8a93',
     fontSize: 14,
     lineHeight: 20,
     marginTop: 8,
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   logoutText: {
-    color: '#7c5f5f',
+    color: '#9b8a93',
     fontSize: 13,
   },
   pressed: {
