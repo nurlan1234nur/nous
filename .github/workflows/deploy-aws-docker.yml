@@ -99,10 +99,13 @@ jobs:
 
       - name: Start Nous on port 8300
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          SUDO_PASSWORD: ${{ secrets.SERVER_SSH_PASSWORD }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_SSH_PASSWORD }}
+          envs: SUDO_PASSWORD
           script: |
             set -eu
             cd /home/${{ secrets.SERVER_USER }}/nous
@@ -117,6 +120,7 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
             for attempt in $(seq 1 30); do
               if curl -fsS http://127.0.0.1:8300/api/health >/dev/null; then
+                printf '%s\n' "$SUDO_PASSWORD" | sudo -S ufw allow 8300/tcp
                 docker compose -f docker-compose.prod.yml ps
                 exit 0
               fi
