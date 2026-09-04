@@ -6,7 +6,7 @@ Nous нь хосуудад зориулсан React web, React Native mobile, No
 
 ## Хөгжүүлсэн арга
 
-Төслийн санаа, шаардлага, feature чиглэлийг би тодорхойлж, AI-г implementation assistant болгон ашигласан. Миний үүрэг зөвхөн prompt бичихээр хязгаарлагдаагүй: гарсан кодыг ажиллуулах, алдаа засах, client/server integration хийх, workflow-ийг сайжруулах замаар full-stack системийн ойлголтоо хөгжүүлсэн.
+Төслийн санаа, шаардлага, feature чиглэлийг тодорхойлж, кодыг ажиллуулах, алдаа засах, client/server integration хийх болон workflow-ийг сайжруулах замаар full-stack системийг хөгжүүлсэн.
 
 ## Бүтэц
 
@@ -42,5 +42,4 @@ Nous нь хосуудад зориулсан React web, React Native mobile, No
 
 ## Portfolio-д хэрэглэх тодорхойлолт
 
-> Шаардлага, бүтээгдэхүүний чиглэлийг өөрөө тодорхойлж, AI-assisted байдлаар хөгжүүлсэн real-time web/mobile application. Энэ төслөөр authentication, Socket.IO, MongoDB, multi-client architecture болон Docker delivery-г практикт сурсан.
-
+> Шаардлага, бүтээгдэхүүний чиглэлийг өөрөө тодорхойлж хөгжүүлсэн real-time web/mobile application. Authentication, Socket.IO, MongoDB, multi-client architecture болон Docker delivery-г хэрэгжүүлсэн.
