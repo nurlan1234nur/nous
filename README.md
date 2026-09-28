@@ -17,7 +17,8 @@
 ```text
 /
   server/        # Express API + Socket.IO + MongoDB
-  client/        # React frontend (Vite)
+  client/        # React frontend (Vite) — PWA
+  mobile/        # Expo React Native app (iOS / Android)
   legacy/        # Хуучин single-file prototype (l-н лавлагаа)
 ```
 
@@ -47,3 +48,13 @@ npm run dev
 3. Network Access дээр өөрийн IP (эсвэл `0.0.0.0/0` түр) нэмнэ.
 4. "Connect" → "Drivers" → connection string-ийг хуулна.
 5. `server/.env` доторх `MONGODB_URI`-д буулгана.
+
+## Тест
+
+```bash
+npm --prefix server test   # Vitest + Supertest + in-memory MongoDB
+npm --prefix mobile test   # Jest + jest-expo
+```
+
+Шаардлага, тестийн хамрах хүрээ, production checklist: [`REQUIREMENTS.md`](REQUIREMENTS.md).
+Mobile шилжилтийн явц: [`MOBILE_MIGRATION.md`](MOBILE_MIGRATION.md).
