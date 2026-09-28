@@ -91,6 +91,13 @@ export interface DailyQuestion {
   answers: DailyAnswer[];
 }
 
+export interface DailyHistoryDay {
+  date: string;
+  question: string;
+  questionIndex: number;
+  answers: DailyAnswer[];
+}
+
 export interface LoveNote {
   _id: string;
   couple: string;

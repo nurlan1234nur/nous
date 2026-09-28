@@ -33,6 +33,7 @@ import BattleshipSheet from '../components/BattleshipSheet';
 import NumberGuessSheet from '../components/NumberGuessSheet';
 import PasswordInput from '../components/PasswordInput';
 import { api } from '../lib/api';
+import DeleteAccountSheet from '../components/DeleteAccountSheet';
 import {
   disableNotifications,
   enableNotifications,
@@ -121,6 +122,7 @@ function readFeatureStyles(): Record<string, FeatureStyle> {
 
 export default function More() {
   const { user, logout, refresh } = useAuth();
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { couple } = useCouple();
   const toast = useToast();
   const longPressTimer = useRef<number | null>(null);
@@ -417,6 +419,10 @@ export default function More() {
         <button onClick={logout} className="mt-3 w-full rounded-2xl border border-rose/40 py-3 text-sm font-medium text-rose">
           Гарах
         </button>
+        <button onClick={() => setDeleteOpen(true)} className="mt-2 w-full py-2 text-xs text-muted underline">
+          Бүртгэл устгах
+        </button>
+        <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />
       </div>
 
       <Sheet open={Boolean(customizing)} onClose={() => setCustomizing(null)} title={customizing?.name ?? 'Icon'}>

@@ -1,4 +1,4 @@
-import { partnerSawMessage, prependUnique, presenceLabel, timeAgo, upsertById } from '../format';
+import { dayLabel, groupByMonth, isImageAvatar, partnerSawMessage, prependUnique, presenceLabel, timeAgo, upsertById } from '../format';
 
 const NOW = new Date('2026-09-28T12:00:00Z').getTime();
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
@@ -47,5 +47,30 @@ describe('list helpers', () => {
       'a',
       'b',
     ]);
+  });
+});
+
+describe('daily archive helpers', () => {
+  it('dayLabel formats Mongolian date + weekday', () => {
+    expect(dayLabel('2026-09-28')).toBe('9-р сарын 28 · Даваа');
+    expect(dayLabel('bad')).toBe('bad');
+  });
+
+  it('groupByMonth keeps order and groups consecutive months', () => {
+    const groups = groupByMonth([{ date: '2026-09-28' }, { date: '2026-09-01' }, { date: '2026-08-31' }]);
+    expect(groups.map((g) => [g.title, g.items.length])).toEqual([
+      ['2026 оны 9-р сар', 2],
+      ['2026 оны 8-р сар', 1],
+    ]);
+  });
+});
+
+describe('isImageAvatar', () => {
+  it('detects uploaded image avatars', () => {
+    expect(isImageAvatar('/uploads/a.jpg')).toBe(true);
+    expect(isImageAvatar('https://res.cloudinary.com/x.jpg')).toBe(true);
+    expect(isImageAvatar('💛')).toBe(false);
+    expect(isImageAvatar('')).toBe(false);
+    expect(isImageAvatar(null)).toBe(false);
   });
 });

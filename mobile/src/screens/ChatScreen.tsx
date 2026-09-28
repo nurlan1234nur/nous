@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -18,6 +19,8 @@ import { getSocket } from '../lib/socket';
 import { partnerSawMessage, prependUnique, presenceLabel, upsertById } from '../lib/format';
 import { imageFormData, pickImage } from '../lib/image';
 import { useResync } from '../hooks/useResync';
+import { AvatarView } from '../components/AvatarView';
+import { SharedMediaModal } from '../components/SharedMediaModal';
 import type { Message } from '../types';
 
 export function ChatScreen() {
@@ -31,6 +34,7 @@ export function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [mediaOpen, setMediaOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const listRef = useRef<FlatList<Message>>(null);
@@ -161,6 +165,33 @@ export function ChatScreen() {
     }
   }
 
+  function openMenu() {
+    Alert.alert('Чат', undefined, [
+      { text: 'Хуваалцсан зургууд', onPress: () => setMediaOpen(true) },
+      {
+        text: 'Чат цэвэрлэх',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('Чатыг бүхэлд нь цэвэрлэх үү?', 'Хоёулангийн бүх зурвас, зураг устна. Буцаах боломжгүй.', [
+            { text: 'Болих', style: 'cancel' },
+            { text: 'Цэвэрлэх', style: 'destructive', onPress: () => void clearChat() },
+          ]),
+      },
+      { text: 'Болих', style: 'cancel' },
+    ]);
+  }
+
+  async function clearChat() {
+    setError('');
+    try {
+      await api('/messages', { method: 'DELETE' });
+      setMessages([]);
+      setHasMore(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not clear chat');
+    }
+  }
+
   async function unsend(messageId: string) {
     setConfirmDeleteId(null);
     setError('');
@@ -184,13 +215,17 @@ export function ChatScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{partner?.avatar || partner?.name?.slice(0, 1).toUpperCase() || '?'}</Text>
+          <AvatarView avatar={partner?.avatar} name={partner?.name} size={44} textStyle={styles.avatarText} />
         </View>
         <View style={styles.headerText}>
           <Text style={styles.title}>{partner?.name ?? 'Chat'}</Text>
           <Text style={[styles.subtitle, partnerOnline && styles.onlineText]}>{partnerStatus}</Text>
         </View>
+        <Pressable accessibilityLabel="Чатын цэс" hitSlop={8} onPress={openMenu} style={styles.menuButton}>
+          <Text style={styles.menuText}>⋯</Text>
+        </Pressable>
       </View>
+      <SharedMediaModal messages={messages} onClose={() => setMediaOpen(false)} open={mediaOpen} />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -305,6 +340,18 @@ export function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  menuButton: {
+    alignItems: 'center',
+    borderRadius: 18,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  menuText: {
+    color: '#e8607a',
+    fontSize: 24,
+    fontWeight: '900',
+  },
   onlineText: {
     color: '#3a9d6a',
   },

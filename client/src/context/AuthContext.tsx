@@ -10,6 +10,7 @@ interface AuthState {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -61,8 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  async function deleteAccount(password: string) {
+    await api('/auth/me', { method: 'DELETE', body: JSON.stringify({ password }) });
+    await disableNotifications().catch(() => {});
+    clearToken();
+    disconnectSocket();
+    setUser(null);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, deleteAccount, refresh }}>
       {children}
     </AuthContext.Provider>
   );

@@ -44,3 +44,34 @@ export function prependUnique<T extends { _id: string }>(older: T[], current: T[
   const seen = new Set(current.map((x) => x._id));
   return [...older.filter((x) => !seen.has(x._id)), ...current];
 }
+
+const MONTHS_MN = ['1-р сар', '2-р сар', '3-р сар', '4-р сар', '5-р сар', '6-р сар', '7-р сар', '8-р сар', '9-р сар', '10-р сар', '11-р сар', '12-р сар'];
+const WEEKDAYS_MN = ['Ням', 'Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан', 'Бямба'];
+
+// "2026-09-28" → "9-р сарын 28 · Даваа"
+export function dayLabel(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  if (!y || !m || !d) return date;
+  return `${m}-р сарын ${d} · ${WEEKDAYS_MN[new Date(y, m - 1, d).getDay()]}`;
+}
+
+// YYYY-MM-DD огноотой жагсаалтыг сараар бүлэглэнэ (оролтын дарааллыг хадгална).
+export function groupByMonth<T extends { date: string }>(items: T[]): Array<{ key: string; title: string; items: T[] }> {
+  const groups: Array<{ key: string; title: string; items: T[] }> = [];
+  for (const item of items) {
+    const key = item.date.slice(0, 7);
+    let group = groups[groups.length - 1];
+    if (!group || group.key !== key) {
+      const [y, m] = key.split('-').map(Number);
+      group = { key, title: `${y} оны ${MONTHS_MN[m - 1] ?? key}`, items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+  return groups;
+}
+
+// Avatar нь upload хийсэн зураг (URL/зам) эсвэл emoji/үсэг байж болно.
+export function isImageAvatar(avatar: string | null | undefined): boolean {
+  return Boolean(avatar && (avatar.startsWith('/uploads/') || /^https?:\/\//.test(avatar)));
+}

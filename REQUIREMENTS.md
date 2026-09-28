@@ -23,7 +23,8 @@
 | AUTH-8 | Нууц үг солих (одоогийнхоор баталгаажуулна) | ✅ | ✅ | ✅ | ✅ server |
 | AUTH-9 | Сэргээх Gmail солих (OTP) | ✅ | ✅ | ✅ | ⬜ |
 | AUTH-10 | Session хадгалах (web: localStorage, mobile: SecureStore), 401 үед автоматаар гаргах | ✅ | 🟡 | ✅ | ✅ mobile |
-| AUTH-11 | **Бүртгэл бүрмөсөн устгах** (App Store 5.1.1(v), Google Play шаардлага) | ✅ | ⬜ | ✅ | ✅ server + mobile |
+| AUTH-12 | Профайл засах, профайл зураг upload | ✅ | ✅ | ✅ | ✅ server (профайл) |
+| AUTH-11 | **Бүртгэл бүрмөсөн устгах** (App Store 5.1.1(v), Google Play шаардлага) | ✅ | ✅ | ✅ | ✅ server + mobile |
 
 ### 1.2 Хос холбох
 
@@ -40,6 +41,7 @@
 |----|-----------|:-:|:-:|:-:|:-:|
 | CHAT-1 | Текст зурвас илгээх / хүлээн авах (Socket.IO) | ✅ | ✅ | ✅ | ✅ server |
 | CHAT-2 | Зураг илгээх | ✅ | ✅ | ✅ | ⬜ |
+| CHAT-8 | Чатын цэс: хуваалцсан зургууд, чат цэвэрлэх | ✅ | ✅ | ✅ | ⬜ |
 | CHAT-3 | Зурвас татах (unsend) — зөвхөн өөрийнхөө | ✅ | ✅ | ✅ | ✅ server |
 | CHAT-4 | Бичиж байна…, Үзсэн, Онлайн / сүүлд онлайн | ✅ | ✅ | ✅ | ✅ mobile (format) |
 | CHAT-5 | Хамгийн сүүлийн зурвасууд харагдана, хуучныг дээш ачаална (`?before=`) | ✅ | 🟡 | ✅ | ✅ server |
@@ -54,28 +56,27 @@
 | MEM-2 | Reaction toggle | ✅ | ✅ | ✅ | ✅ server |
 | MEM-3 | Зөвхөн зохиогч устгана, файл нь хамт устна | ✅ | ✅ | ✅ | ✅ server |
 | TL-1 | Ой / төрсөн өдөр автоматаар, custom milestone нэмэх/устгах | ✅ | ✅ | ✅ | ⬜ |
-| DAY-1 | Өдрийн асуулт, хариулт, архив | ✅ | ✅ | 🟡 (архивгүй) | ⬜ |
+| DAY-1 | Өдрийн асуулт, хариулт, архив | ✅ | ✅ | ✅ | ✅ server + mobile (helper) |
 | MOOD-1 | Сэтгэл санаа тэмдэглэх | ✅ | ✅ | ✅ | ⬜ |
 
 ### 1.5 Хамтын функц, тоглоом
 
 | ID | Шаардлага | Server | Web | Mobile | Тест |
 |----|-----------|:-:|:-:|:-:|:-:|
-| FUN-1 | Love Notes (түгжээтэй захидал) | ✅ | ✅ | ✅ | ⬜ |
-| FUN-2 | Time Capsule | ✅ | ✅ | ✅ | ⬜ |
+| FUN-1 | Love Notes (түгжээтэй захидал) | ✅ | ✅ | ✅ | ✅ server |
+| FUN-2 | Time Capsule | ✅ | ✅ | ✅ | ✅ server |
 | FUN-3 | Song of Us (YouTube) | ✅ | ✅ | 🟡 (гадна нээнэ, mini player-гүй) | ⬜ |
-| FUN-4 | Dream Jar (2/2 зөвшөөрөл) | ✅ | ✅ | ✅ | ⬜ |
+| FUN-4 | Dream Jar (2/2 зөвшөөрөл) | ✅ | ✅ | ✅ | ✅ server |
 | GAME-1 | Хэн нь илүү | ✅ | ✅ | ✅ | ⬜ |
 | GAME-2 | Онгоц буудах | ✅ | ✅ | ✅ | ⬜ |
-| GAME-3 | Тоо олох | ✅ | ✅ | ✅ | ⬜ |
+| GAME-3 | Тоо олох | ✅ | ✅ | ✅ | ✅ server |
 
 ### 1.6 Web-д байгаа, mobile-д дутуу
 
-- Өдрийн асуултын архив (`DailyArchive`)
-- Хамтрагчийн профайл sheet, хуваалцсан медиа (`SharedMediaSheet`), чатын цэс, чат цэвэрлэх
-- Wallpaper, theme-ийн өнгийг UI-д хэрэглэх
-- Song mini player (app дотор тоглуулах)
-- Профайл зураг upload (одоо зөвхөн emoji)
+- Хамтрагчийн профайл sheet
+- Чатын wallpaper, theme-ийн өнгийг UI-д хэрэглэх (одоо зөвхөн rose)
+- Song mini player (app дотор тоглуулах; одоо YouTube-ийг гадна нээнэ)
+- Хуваалцсан зургууд зөвхөн ачаалагдсан зурвасуудаас харагдана (серверийн тусдаа endpoint хэрэгтэй)
 
 ---
 
@@ -130,6 +131,7 @@ Deploy зөвхөн `main`/`master` дээр, бүх шалгалт давсны
 | Server | `server/test/auth.test.ts` | Бүртгэл, OTP (хугацаа, 5 оролдлого, дахин ашиглах), production-д devCode нуух, login, нууц үг сэргээх/солих, профайл |
 | Server | `server/test/couple.test.ts` | Хос үүсгэх/нэгдэх, зэрэг нэгдэлт, хос хоорондын тусгаарлалт, чат (жагсаалт, pagination, unsend) |
 | Server | `server/test/moments.test.ts` | Зураг upload, reaction, эрх, файл устгах, зураг биш файл татгалзах |
+| Server | `server/test/features.test.ts` | Dream Jar 2/2, Love Note нуугдах/нээх эрх, Time Capsule түгжээ, өдрийн асуулт + түүх, Тоо олох (ээлж, alpha/betta, ялагч, reset) |
 | Server | `server/test/account.test.ts` | Expo push token бүртгэх/шилжүүлэх, бүртгэл устгах (хамтрагчид өгөгдөл үлдэх, сүүлийнх устгавал бүгд устах) |
 | Mobile | `mobile/src/lib/__tests__/api.test.ts` | Token header, алдааны мессеж, 401 → logout, сүлжээний алдаа, asset URL |
 | Mobile | `mobile/src/lib/__tests__/format.test.ts` | Хугацаа, онлайн төлөв, "Үзсэн", жагсаалтын туслахууд |
@@ -137,8 +139,8 @@ Deploy зөвхөн `main`/`master` дээр, бүх шалгалт давсны
 
 ### 3.3 Дараагийн тестүүд
 
-1. Тоглоомын route-ууд (battleship, number-guess, who-is-more) — ээлж, ялагч, reset approval.
-2. Wish / love note / capsule — зөвшөөрөл ба түгжээ.
+1. Battleship, Хэн нь илүү тоглоомын route-ууд.
+2. Чатын зураг upload, чат цэвэрлэх.
 3. Socket.IO integration test (`socket.io-client`-ээр): auth, room тусгаарлалт, presence.
 4. Mobile E2E (Maestro): login → хос → чат → зураг → logout. Бодит төхөөрөмж дээрх QA доорх checklist-ээр.
 

@@ -58,3 +58,4 @@ npm --prefix mobile test   # Jest + jest-expo
 
 Шаардлага, тестийн хамрах хүрээ, production checklist: [`REQUIREMENTS.md`](REQUIREMENTS.md).
 Mobile шилжилтийн явц: [`MOBILE_MIGRATION.md`](MOBILE_MIGRATION.md).
+Таны (owner) хийх зүйлс: [`TANII_HIIH_ZUILS.md`](TANII_HIIH_ZUILS.md).

@@ -20,8 +20,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Анхны ачаалалтаас бусад үед loading-г асаахгүй — эс бөгөөс AppShell spinner харуулж
+  // бүх дэлгэцийг unmount хийн, профайл хадгалсны дараа Home tab руу үсэрдэг байсан.
   async function refresh() {
-    setLoading(true);
     try {
       const token = await getToken();
       if (!token) {
@@ -31,9 +32,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const response = await api<{ user: User }>('/auth/me');
       setUser(response.user);
-    } catch {
-      await clearToken();
-      setUser(null);
+    } catch (err) {
+      // Зөвхөн token хүчингүй бол гаргана; сүлжээний түр алдаанд session-г хадгална.
+      if ((err as { status?: number }).status === 401 || (err as { status?: number }).status === 404) {
+        await clearToken();
+        setUser(null);
+      }
     } finally {
       setLoading(false);
     }

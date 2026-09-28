@@ -5,6 +5,7 @@ import { useCouple } from '../context/CoupleContext';
 import { api, assetUrl } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import { useResync } from '../hooks/useResync';
+import { DailyArchiveModal } from '../components/DailyArchiveModal';
 import type { DailyQuestion, Moment, Mood } from '../types';
 
 const moodOptions = [
@@ -30,6 +31,7 @@ export function HomeScreen() {
   const [moments, setMoments] = useState<Moment[]>([]);
   const [moods, setMoods] = useState<Mood[]>([]);
   const [daily, setDaily] = useState<DailyQuestion | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [answer, setAnswer] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -149,7 +151,12 @@ export function HomeScreen() {
       {loading ? <ActivityIndicator color="#e8607a" style={styles.sectionLoader} /> : null}
 
       <View style={styles.dailyCard}>
-        <Text style={styles.dailyEyebrow}>Daily question</Text>
+        <View style={styles.dailyTop}>
+          <Text style={styles.dailyEyebrow}>Daily question</Text>
+          <Pressable accessibilityRole="button" onPress={() => setArchiveOpen(true)} hitSlop={8}>
+            <Text style={styles.archiveLink}>Архив ›</Text>
+          </Pressable>
+        </View>
         <Text style={styles.dailyQuestion}>{daily?.question ? `"${daily.question}"` : 'No question loaded yet.'}</Text>
         <View style={styles.answerRow}>
           <AnswerBox dark name={me?.name ?? 'Me'} text={myAnswer?.text} />
@@ -199,6 +206,7 @@ export function HomeScreen() {
           <Text style={styles.empty}>No memories yet. Add one from Memories tab.</Text>
         )}
       </View>
+      <DailyArchiveModal onClose={() => setArchiveOpen(false)} open={archiveOpen} />
     </ScrollView>
   );
 }
@@ -305,6 +313,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.14,
     shadowRadius: 18,
     elevation: 7,
+  },
+  dailyTop: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  archiveLink: {
+    color: '#f5c6ce',
+    fontSize: 12,
+    fontWeight: '800',
   },
   dailyEyebrow: {
     color: '#f5c6ce',

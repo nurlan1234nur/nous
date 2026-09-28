@@ -192,7 +192,7 @@ password: password123
 | Home | `client/src/pages/Home.tsx` | In progress | Native dashboard, daily question, mood, latest memory эхэлсэн |
 | Timeline | `client/src/pages/Timeline.tsx` | In progress | Native read-only timeline эхэлсэн |
 | Memories | `client/src/pages/Memories.tsx` | In progress | Native list, reactions, image upload эхэлсэн |
-| Chat | `client/src/pages/Chat.tsx` | In progress | Text, зураг, unsend, typing, seen, онлайн төлөв, хуучин зурвас ачаалах; чат цэвэрлэх/медиа sheet үлдсэн |
+| Chat | `client/src/pages/Chat.tsx` | In progress | Text, зураг, unsend, typing, seen, онлайн төлөв, хуучин зурвас ачаалах, ⋯ цэс (хуваалцсан зургууд, чат цэвэрлэх) |
 | More/settings | `client/src/pages/More.tsx` | In progress | Profile edit, account card, recovery email, password change, logout эхэлсэн |
 | Anniversary reminders | `client/src/components/AnniversaryReminderSheet.tsx` | In progress | Native full-screen modal, anniversary update, upcoming reminders, custom reminder add/delete нэмэв |
 | Who is more | `client/src/components/CoupleGameSheet.tsx` | In progress | Native full-screen modal, quiz list/create, partner answer, result view, delete unopened quiz нэмэв |
@@ -202,8 +202,8 @@ password: password123
 | Socket | `client/src/lib/socket.ts` | Done | Reconnect бүрт token шинээр, foreground болоход сэргээнэ, `useResync` |
 | API client | `client/src/lib/api.ts` | Done | Timeout, сүлжээний алдаа, 401 → автомат logout |
 | Account deletion | — (web-д байхгүй) | Done | More > Бүртгэл устгах (store шаардлага) |
-| Daily archive | `client/src/pages/DailyArchive.tsx` | Not started | `/api/daily/history` |
-| Avatar upload | `client/src/components/ProfileSheet.tsx` | Not started | `/api/auth/me/avatar` |
+| Daily archive | `client/src/pages/DailyArchive.tsx` | Done | Home > Архив, сараар бүлэглэсэн жагсаалт |
+| Avatar upload | `client/src/components/ProfileSheet.tsx` | Done | More > профайл засах > Зураг оруулах; зурагтай avatar-ыг Chat/More-д харуулна |
 
 ## Migration log
 
@@ -250,6 +250,7 @@ password: password123
 | 2026-06-29 | PWA Тоо олох approval/fullscreen болгов | Тоо олох тоглоомыг Battleship шиг full-screen view болгож, гарахад confirm, шинэ тоглоом эхлэхэд хоёр талын approval шаарддаг болгов |
 | 2026-06-29 | PWA Хэн нь илүү fullscreen болгов | Хэн нь илүү тоглоомыг bottom sheet-ээс full-screen game view болгож, гарахад confirm болон test delete confirm нэмэв |
 | 2026-09-28 | Production суурь | Native push (Expo), safe area, 401 auto-logout, API timeout, socket reconnect/foreground resync, чатад зураг + онлайн төлөв + pagination, бүртгэл устгах, `app.json` bundle id/permission, `eas.json`, Jest тест нэмэв. Дэлгэрэнгүйг `REQUIREMENTS.md`-ээс |
+| 2026-09-28 | Parity нэмэлт | Өдрийн асуултын архив, профайл зураг upload, чатын цэс (хуваалцсан зургууд, чат цэвэрлэх); профайл хадгалахад app бүхэлдээ дахин ачаалагддаг алдааг засав |
 
 ## Working rules
 
