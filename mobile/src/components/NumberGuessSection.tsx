@@ -5,12 +5,14 @@ import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import type { NumberGuessAttempt, NumberGuessGame } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function cleanCode(value: string): string {
   return value.replace(/\D/g, '').slice(0, 4);
 }
 
 export function NumberGuessSection() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { partner } = useCouple();
   const [open, setOpen] = useState(false);
@@ -165,7 +167,7 @@ export function NumberGuessSection() {
 
       <Modal animationType="slide" onRequestClose={closeGame} visible={open}>
         <View style={styles.screen}>
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
             <View>
               <Text style={styles.title}>Тоо олох</Text>
               <Text style={styles.subtitle}>Alpha / Betta - 4 alpha бол ялна</Text>

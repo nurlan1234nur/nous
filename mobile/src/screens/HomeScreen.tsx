@@ -3,7 +3,9 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, Text
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api, assetUrl } from '../lib/api';
-import { getSocket } from '../lib/socket';
+import { useSocketEvents } from '../hooks/useSocketEvents';
+import { useResync } from '../hooks/useResync';
+import { DailyArchiveModal } from '../components/DailyArchiveModal';
 import type { DailyQuestion, Moment, Mood } from '../types';
 
 const moodOptions = [
@@ -29,6 +31,7 @@ export function HomeScreen() {
   const [moments, setMoments] = useState<Moment[]>([]);
   const [moods, setMoods] = useState<Mood[]>([]);
   const [daily, setDaily] = useState<DailyQuestion | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [answer, setAnswer] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -57,32 +60,17 @@ export function HomeScreen() {
     void loadHome();
   }, [loadHome]);
 
-  useEffect(() => {
-    let active = true;
-    void getSocket()
-      .then((socket) => {
-        if (!active) return;
-        socket.on('moment:new', (moment: Moment) => setMoments((current) => (current.some((item) => item._id === moment._id) ? current : [moment, ...current])));
-        socket.on('moment:react', (moment: Moment) => setMoments((current) => current.map((item) => (item._id === moment._id ? moment : item))));
-        socket.on('moment:deleted', ({ id }: { id: string }) => setMoments((current) => current.filter((item) => item._id !== id)));
-        socket.on('mood:new', (mood: Mood) => setMoods((current) => [mood, ...current]));
-        socket.on('daily:answer', () => void api<DailyQuestion>('/daily').then(setDaily));
-      })
-      .catch(() => undefined);
+  useResync(() => void loadHome());
 
-    return () => {
-      active = false;
-      void getSocket()
-        .then((socket) => {
-          socket.off('moment:new');
-          socket.off('moment:react');
-          socket.off('moment:deleted');
-          socket.off('mood:new');
-          socket.off('daily:answer');
-        })
-        .catch(() => undefined);
-    };
-  }, []);
+  useSocketEvents({
+    'moment:new': (moment: Moment) =>
+      setMoments((current) => (current.some((item) => item._id === moment._id) ? current : [moment, ...current])),
+    'moment:react': (moment: Moment) =>
+      setMoments((current) => current.map((item) => (item._id === moment._id ? moment : item))),
+    'moment:deleted': ({ id }: { id: string }) => setMoments((current) => current.filter((item) => item._id !== id)),
+    'mood:new': (mood: Mood) => setMoods((current) => [mood, ...current]),
+    'daily:answer': () => void api<DailyQuestion>('/daily').then(setDaily).catch(() => {}),
+  });
 
   const myMood = useMemo(() => moods.find((mood) => mood.user._id === me?._id), [me?._id, moods]);
   const partnerMood = useMemo(() => moods.find((mood) => mood.user._id === partner?._id), [partner?._id, moods]);
@@ -146,7 +134,12 @@ export function HomeScreen() {
       {loading ? <ActivityIndicator color="#e8607a" style={styles.sectionLoader} /> : null}
 
       <View style={styles.dailyCard}>
-        <Text style={styles.dailyEyebrow}>Daily question</Text>
+        <View style={styles.dailyTop}>
+          <Text style={styles.dailyEyebrow}>Daily question</Text>
+          <Pressable accessibilityRole="button" onPress={() => setArchiveOpen(true)} hitSlop={8}>
+            <Text style={styles.archiveLink}>Архив ›</Text>
+          </Pressable>
+        </View>
         <Text style={styles.dailyQuestion}>{daily?.question ? `"${daily.question}"` : 'No question loaded yet.'}</Text>
         <View style={styles.answerRow}>
           <AnswerBox dark name={me?.name ?? 'Me'} text={myAnswer?.text} />
@@ -196,6 +189,7 @@ export function HomeScreen() {
           <Text style={styles.empty}>No memories yet. Add one from Memories tab.</Text>
         )}
       </View>
+      <DailyArchiveModal onClose={() => setArchiveOpen(false)} open={archiveOpen} />
     </ScrollView>
   );
 }
@@ -235,7 +229,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    paddingTop: 28,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   header: {
@@ -302,6 +296,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.14,
     shadowRadius: 18,
     elevation: 7,
+  },
+  dailyTop: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  archiveLink: {
+    color: '#f5c6ce',
+    fontSize: 12,
+    fontWeight: '800',
   },
   dailyEyebrow: {
     color: '#f5c6ce',

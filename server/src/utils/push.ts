@@ -2,6 +2,7 @@ import webpush from 'web-push';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { WebPushSubscription } from '../models/WebPushSubscription.js';
+import { sendExpoPush } from './expoPush.js';
 
 export const pushEnabled = Boolean(env.vapidPublicKey && env.vapidPrivateKey);
 
@@ -15,20 +16,28 @@ export async function sendMessagePush(
   text: string,
   hasImage = false,
 ): Promise<void> {
-  if (!pushEnabled) return;
-
   const [sender, recipients] = await Promise.all([
     User.findById(senderId).select('name'),
     User.find({ couple: coupleId, _id: { $ne: senderId } }).select('_id'),
   ]);
   if (!sender || recipients.length === 0) return;
 
+  const body = text.trim().slice(0, 120) || (hasImage ? 'Зураг илгээлээ' : 'Шинэ зурвас ирлээ');
+
+  // Native app (Expo) — VAPID-аас хамааралгүй.
+  await sendExpoPush(
+    recipients.map((recipient) => recipient._id.toString()),
+    { title: sender.name, body, data: { url: '/chat', type: 'message' } },
+  ).catch((error) => console.error('[EXPO PUSH]', (error as Error).message));
+
+  if (!pushEnabled) return;
+
   const subscriptions = await WebPushSubscription.find({
     user: { $in: recipients.map((recipient) => recipient._id) },
   });
   const payload = JSON.stringify({
     title: sender.name,
-    body: text.trim().slice(0, 120) || (hasImage ? 'Зураг илгээлээ' : 'Шинэ зурвас ирлээ'),
+    body,
     url: '/chat',
     tag: `message:${coupleId}`,
   });

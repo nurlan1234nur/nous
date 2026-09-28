@@ -4,6 +4,7 @@ import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import type { WhoIsMoreQuestion, WhoIsMoreQuiz, WhoIsMoreQuizSummary } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Mode = 'list' | 'editor' | 'detail';
 type DraftQuestion = { text: string; options: string[]; correctIndex: number };
@@ -17,6 +18,7 @@ function optionText(question: WhoIsMoreQuestion, id: string | null): string {
 }
 
 export function WhoIsMoreSection() {
+  const insets = useSafeAreaInsets();
   const { partner } = useCouple();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('list');
@@ -197,7 +199,7 @@ export function WhoIsMoreSection() {
 
       <Modal animationType="slide" onRequestClose={closeGame} visible={open}>
         <View style={styles.screen}>
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
             <View>
               <Text style={styles.title}>Хэн нь илүү?</Text>
               <Text style={styles.subtitle}>Тест үүсгээд partner-аараа бөглүүлэх</Text>

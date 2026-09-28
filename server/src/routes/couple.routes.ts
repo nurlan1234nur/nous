@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { User } from '../models/User.js';
 import { Couple } from '../models/Couple.js';
@@ -7,8 +8,22 @@ import { requireAuth } from '../middleware/auth.js';
 
 export const coupleRouter = Router();
 
+// Андуурагдах тэмдэгтгүй (0/O, 1/I) 6 оронтой код.
+const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
 function makeInviteCode(): string {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
+  let code = '';
+  for (let i = 0; i < 6; i += 1) code += INVITE_ALPHABET[randomInt(INVITE_ALPHABET.length)];
+  return code;
+}
+
+async function uniqueInviteCode(): Promise<string> {
+  for (let i = 0; i < 5; i += 1) {
+    const code = makeInviteCode();
+    // eslint-disable-next-line no-await-in-loop
+    if (!(await Couple.exists({ inviteCode: code }))) return code;
+  }
+  throw new Error('Урилгын код үүсгэж чадсангүй');
 }
 
 // Шинэ хос үүсгэж урилгын код авах.
@@ -26,7 +41,7 @@ coupleRouter.post(
       return;
     }
 
-    const couple = await Couple.create({ inviteCode: makeInviteCode(), members: [user._id] });
+    const couple = await Couple.create({ inviteCode: await uniqueInviteCode(), members: [user._id] });
     user.couple = couple._id;
     await user.save();
 
@@ -52,18 +67,20 @@ coupleRouter.post(
       return;
     }
 
-    const couple = await Couple.findOne({ inviteCode: inviteCode.toUpperCase() });
+    const code = inviteCode.trim().toUpperCase();
+    // Атомик нэгдэлт: хоёр хүн зэрэг нэгдэхэд 3 гишүүнтэй хос үүсэхээс сэргийлнэ.
+    const couple = await Couple.findOneAndUpdate(
+      { inviteCode: code, 'members.1': { $exists: false }, members: { $ne: user._id } },
+      { $push: { members: user._id } },
+      { new: true },
+    );
     if (!couple) {
-      res.status(404).json({ error: 'Урилгын код буруу байна' });
-      return;
-    }
-    if (couple.members.length >= 2) {
-      res.status(409).json({ error: 'Энэ хос дүүрсэн байна' });
+      const exists = await Couple.exists({ inviteCode: code });
+      if (!exists) res.status(404).json({ error: 'Урилгын код буруу байна' });
+      else res.status(409).json({ error: 'Энэ хос дүүрсэн байна' });
       return;
     }
 
-    couple.members.push(user._id);
-    await couple.save();
     user.couple = couple._id;
     await user.save();
 

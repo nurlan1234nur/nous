@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 16,
   },
   title: {
     color: '#2d1f2e',

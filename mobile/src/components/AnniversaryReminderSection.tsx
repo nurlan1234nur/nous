@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Tex
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import type { Member, Milestone } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type ReminderItem = {
   id: string;
@@ -83,6 +84,7 @@ function generatedReminders(anniversary: string | null | undefined, members: Mem
 }
 
 export function AnniversaryReminderSection() {
+  const insets = useSafeAreaInsets();
   const { couple, refresh } = useCouple();
   const [open, setOpen] = useState(false);
   const [anniversary, setAnniversary] = useState('');
@@ -214,7 +216,7 @@ export function AnniversaryReminderSection() {
 
       <Modal animationType="slide" onRequestClose={() => setOpen(false)} visible={open}>
         <View style={styles.screen}>
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
             <View>
               <Text style={styles.titleText}>Ойн сануулга</Text>
               <Text style={styles.subtitle}>Чухал өдрүүдээ нэг дор</Text>

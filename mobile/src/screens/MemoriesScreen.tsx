@@ -5,6 +5,7 @@ import { TextInput } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api, apiUpload, assetUrl } from '../lib/api';
 import { getSocket } from '../lib/socket';
+import { useResync } from '../hooks/useResync';
 import type { Moment } from '../types';
 
 function monthLabel(value: string): string {
@@ -38,6 +39,8 @@ export function MemoriesScreen() {
   useEffect(() => {
     void loadMoments();
   }, [loadMoments]);
+
+  useResync(() => void loadMoments());
 
   useEffect(() => {
     let mounted = true;
@@ -238,7 +241,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: 16,
   },
   title: {
     color: '#2d1f2e',

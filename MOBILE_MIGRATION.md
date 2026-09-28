@@ -57,43 +57,43 @@
 
 ### Phase 2: Auth ба couple setup
 
-- [ ] API client port хийх.
-- [ ] Token storage-г native-д тааруулах.
-- [ ] Login/register/OTP flow port хийх.
-- [ ] Couple setup screen port хийх.
-- [ ] Logout/session restore шалгах.
+- [x] API client port хийх.
+- [x] Token storage-г native-д тааруулах.
+- [x] Login/register/OTP flow port хийх.
+- [x] Couple setup screen port хийх.
+- [x] Logout/session restore шалгах.
 
 ### Phase 3: Core app navigation
 
-- [ ] Bottom tabs/stack navigation хийх.
-- [ ] Home screen port хийх.
-- [ ] More/settings screen port хийх.
-- [ ] Basic profile UI port хийх.
+- [x] Bottom tabs/stack navigation хийх.
+- [x] Home screen port хийх.
+- [x] More/settings screen port хийх.
+- [x] Basic profile UI port хийх.
 
 ### Phase 4: Chat ба realtime
 
-- [ ] Socket connection native дээр ажиллуулах.
-- [ ] Chat text message flow port хийх.
-- [ ] App background/foreground reconnect шалгах.
+- [x] Socket connection native дээр ажиллуулах.
+- [x] Chat text message flow port хийх.
+- [x] App background/foreground reconnect шалгах.
 - [ ] Message list performance шалгах.
 
 ### Phase 5: Media ба memories
 
-- [ ] Image picker нэмэх.
-- [ ] Upload API-г native FormData дээр шалгах.
-- [ ] Memories/timeline list port хийх.
-- [ ] Server asset URL-ууд mobile дээр absolute URL болж байгаа эсэхийг шалгах.
+- [x] Image picker нэмэх.
+- [x] Upload API-г native FormData дээр шалгах.
+- [x] Memories/timeline list port хийх.
+- [x] Server asset URL-ууд mobile дээр absolute URL болж байгаа эсэхийг шалгах.
 
 ### Phase 6: Native push notification
 
-- [ ] Expo notification permission flow хийх.
-- [ ] Device push token хадгалах backend model/route нэмэх.
-- [ ] Native push send logic нэмэх.
+- [x] Expo notification permission flow хийх.
+- [x] Device push token хадгалах backend model/route нэмэх.
+- [x] Native push send logic нэмэх.
 - [ ] Android/iOS device дээр notification шалгах.
 
 ### Phase 7: Internal build
 
-- [ ] EAS project тохируулах.
+- [ ] EAS project тохируулах. (`eas.json` бэлэн; `eas init` хийж `projectId` авах үлдсэн)
 - [ ] Android internal build гаргах.
 - [ ] iOS TestFlight/ad hoc боломжийг шалгах.
 - [ ] Real device QA checklist ажиллуулах.
@@ -192,15 +192,18 @@ password: password123
 | Home | `client/src/pages/Home.tsx` | In progress | Native dashboard, daily question, mood, latest memory эхэлсэн |
 | Timeline | `client/src/pages/Timeline.tsx` | In progress | Native read-only timeline эхэлсэн |
 | Memories | `client/src/pages/Memories.tsx` | In progress | Native list, reactions, image upload эхэлсэн |
-| Chat | `client/src/pages/Chat.tsx` | In progress | Native text message list/send + realtime эхэлсэн |
+| Chat | `client/src/pages/Chat.tsx` | In progress | Text, зураг, unsend, typing, seen, онлайн төлөв, хуучин зурвас ачаалах, ⋯ цэс (хуваалцсан зургууд, чат цэвэрлэх) |
 | More/settings | `client/src/pages/More.tsx` | In progress | Profile edit, account card, recovery email, password change, logout эхэлсэн |
 | Anniversary reminders | `client/src/components/AnniversaryReminderSheet.tsx` | In progress | Native full-screen modal, anniversary update, upcoming reminders, custom reminder add/delete нэмэв |
 | Who is more | `client/src/components/CoupleGameSheet.tsx` | In progress | Native full-screen modal, quiz list/create, partner answer, result view, delete unopened quiz нэмэв |
 | Battleship | `client/src/components/BattleshipSheet.tsx` | In progress | Native full-screen modal, plane placement, ready/unready, turn shooting, result/reset нэмэв |
 | Number Guess | `client/src/components/NumberGuessSheet.tsx` | In progress | Native full-screen modal, secret setup, turn guess, alpha/betta history, reset approval нэмэв |
-| Notifications | `client/src/lib/notifications.ts` | Needs native rewrite | Web Push биш native push |
-| Socket | `client/src/lib/socket.ts` | Not started | Backend хэвээр |
-| API client | `client/src/lib/api.ts` | Not started | Storage/env ялгаатай |
+| Notifications | `client/src/lib/notifications.ts` | Done (device QA үлдсэн) | `mobile/src/lib/notifications.ts` — Expo push token, `/api/notifications/expo`, tap → чат |
+| Socket | `client/src/lib/socket.ts` | Done | Reconnect бүрт token шинээр, foreground болоход сэргээнэ, `useResync` |
+| API client | `client/src/lib/api.ts` | Done | Timeout, сүлжээний алдаа, 401 → автомат logout |
+| Account deletion | — (web-д байхгүй) | Done | More > Бүртгэл устгах (store шаардлага) |
+| Daily archive | `client/src/pages/DailyArchive.tsx` | Done | Home > Архив, сараар бүлэглэсэн жагсаалт |
+| Avatar upload | `client/src/components/ProfileSheet.tsx` | Done | More > профайл засах > Зураг оруулах; зурагтай avatar-ыг Chat/More-д харуулна |
 
 ## Migration log
 
@@ -246,6 +249,9 @@ password: password123
 | 2026-06-29 | PWA Тоо олох UI сайжруулав | Дүрмийг `!`/help товчоор нээгддэг болгож, тоглоом дундаас шинэ тоглоом эхлэх action нэмэв |
 | 2026-06-29 | PWA Тоо олох approval/fullscreen болгов | Тоо олох тоглоомыг Battleship шиг full-screen view болгож, гарахад confirm, шинэ тоглоом эхлэхэд хоёр талын approval шаарддаг болгов |
 | 2026-06-29 | PWA Хэн нь илүү fullscreen болгов | Хэн нь илүү тоглоомыг bottom sheet-ээс full-screen game view болгож, гарахад confirm болон test delete confirm нэмэв |
+| 2026-09-28 | Production суурь | Native push (Expo), safe area, 401 auto-logout, API timeout, socket reconnect/foreground resync, чатад зураг + онлайн төлөв + pagination, бүртгэл устгах, `app.json` bundle id/permission, `eas.json`, Jest тест нэмэв. Дэлгэрэнгүйг `REQUIREMENTS.md`-ээс |
+| 2026-09-28 | Parity нэмэлт | Өдрийн асуултын архив, профайл зураг upload, чатын цэс (хуваалцсан зургууд, чат цэвэрлэх); профайл хадгалахад app бүхэлдээ дахин ачаалагддаг алдааг засав |
+| 2026-09-28 | Real-time засвар + профайл | `useSocketEvents` hook: таб солиход бусад дэлгэцийн socket listener устдаг алдааг засав; хамтрагчийн профайл, хуваалцсан зургийг серверээс pagination-тэй, Нууцлалын бодлогын холбоос |
 
 ## Working rules
 

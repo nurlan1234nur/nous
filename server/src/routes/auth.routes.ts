@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomInt } from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { User } from '../models/User.js';
@@ -8,17 +9,21 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { requireAuth } from '../middleware/auth.js';
 import { deleteStoredImage, storeUploadedImage, upload } from '../config/uploads.js';
 import { sendOtpEmail } from '../utils/mailer.js';
+import { deleteAccount } from '../utils/accountDeletion.js';
 import { todayStr } from '../data/questions.js';
+import { env } from '../config/env.js';
+import { loginLimiter, otpRequestLimiter, otpVerifyLimiter } from '../middleware/rateLimit.js';
 
 export const authRouter = Router();
 
 const DOMAIN = 'nous.mn';
 const OTP_TTL_MIN = 10;
+const OTP_MAX_ATTEMPTS = 5;
 
 // ---- туслах функцүүд ----
 
 function genCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000)); // 6 оронтой
+  return String(randomInt(100000, 1000000)); // 6 оронтой, криптографийн санамсаргүй
 }
 
 // username-ийг латин жижиг үсэг + тоо болгож цэвэрлэнэ.
@@ -92,8 +97,27 @@ function maskEmail(email: string): string {
 }
 
 // Жинхэнэ имэйл явсангүй бол (dev эсвэл алдаа) кодыг хариунд буцааж дэлгэцэнд харуулна.
+// Production-д хэзээ ч буцаахгүй — эс бөгөөс хэн ч бусдын нууц үгийг сэргээж чадна.
 function devCodePayload(code: string, delivered: boolean): { devCode?: string } {
-  return delivered ? {} : { devCode: code };
+  return !delivered && env.exposeDevOtp ? { devCode: code } : {};
+}
+
+// OTP-г шалгана. Буруу бол оролдлогыг тоолж, хэт олон бол кодыг хүчингүй болгоно.
+// Зөв бол тухайн зорилгын бүх кодыг устгаж true буцаана.
+async function consumeOtp(
+  filter: { email?: string; user?: string; purpose: 'register' | 'reset' | 'change-email' },
+  code: string,
+): Promise<{ ok: true; email: string } | { ok: false }> {
+  const otp = await OtpCode.findOne({ ...filter, expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
+  if (!otp) return { ok: false };
+  if (otp.code !== code) {
+    otp.attempts = (otp.attempts ?? 0) + 1;
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) await otp.deleteOne();
+    else await otp.save();
+    return { ok: false };
+  }
+  await OtpCode.deleteMany(filter);
+  return { ok: true, email: otp.email };
 }
 
 async function issueOtp(email: string, purpose: 'register' | 'reset' | 'change-email', user?: unknown) {
@@ -115,6 +139,7 @@ async function issueOtp(email: string, purpose: 'register' | 'reset' | 'change-e
 // 1-р алхам: жинхэнэ Gmail рүү код илгээнэ
 authRouter.post(
   '/register/request-otp',
+  otpRequestLimiter,
   asyncHandler(async (req, res) => {
     const { recoveryEmail } = z.object({ recoveryEmail: z.string().email() }).parse(req.body);
     const email = recoveryEmail.toLowerCase().trim();
@@ -132,6 +157,7 @@ authRouter.post(
 // 2-р алхам: код + username + нууц үг → бүртгэл үүсгэнэ (нэвтрүүлэхгүй, login руу буцаана)
 authRouter.post(
   '/register/verify',
+  otpVerifyLimiter,
   asyncHandler(async (req, res) => {
     const { recoveryEmail, code, username, password } = z
       .object({
@@ -148,14 +174,13 @@ authRouter.post(
       return;
     }
 
-    const otp = await OtpCode.findOne({ email, purpose: 'register', code });
-    if (!otp) {
+    const otp = await consumeOtp({ email, purpose: 'register' }, code);
+    if (!otp.ok) {
       res.status(400).json({ error: 'Код буруу эсвэл хугацаа дууссан байна' });
       return;
     }
 
     if (await User.exists({ recoveryEmail: email })) {
-      await OtpCode.deleteMany({ email, purpose: 'register' });
       res.status(409).json({ error: 'Энэ Gmail аль хэдийн бүртгэлтэй байна' });
       return;
     }
@@ -168,7 +193,6 @@ authRouter.post(
       name: username.trim(),
       passwordHash,
     });
-    await OtpCode.deleteMany({ email, purpose: 'register' });
 
     // Нэвтрэх нэр (давхцсан бол aysu1 г.м.) болон давхцсан эсэхийг буцаана.
     res.status(201).json({ ok: true, username: finalUsername, changed: finalUsername !== sanitizeUsername(username) });
@@ -179,6 +203,7 @@ authRouter.post(
 
 authRouter.post(
   '/login',
+  loginLimiter,
   asyncHandler(async (req, res) => {
     const { username, password } = z
       .object({ username: z.string().min(1), password: z.string().min(1) })
@@ -201,6 +226,7 @@ authRouter.post(
 // 1-р алхам: username → бүртгэлд холбоотой жинхэнэ Gmail руу код илгээнэ
 authRouter.post(
   '/forgot/request-otp',
+  otpRequestLimiter,
   asyncHandler(async (req, res) => {
     const { username } = z.object({ username: z.string().min(1) }).parse(req.body);
     const email = toLoginEmail(username);
@@ -221,6 +247,7 @@ authRouter.post(
 // 2-р алхам: код + шинэ нууц үг
 authRouter.post(
   '/forgot/verify',
+  otpVerifyLimiter,
   asyncHandler(async (req, res) => {
     const { username, code, password } = z
       .object({
@@ -236,14 +263,13 @@ authRouter.post(
       res.status(404).json({ error: 'Бүртгэл олдсонгүй' });
       return;
     }
-    const otp = await OtpCode.findOne({ email: user.recoveryEmail, purpose: 'reset', code });
-    if (!otp) {
+    const otp = await consumeOtp({ email: user.recoveryEmail, purpose: 'reset' }, code);
+    if (!otp.ok) {
       res.status(400).json({ error: 'Код буруу эсвэл хугацаа дууссан байна' });
       return;
     }
     user.passwordHash = await bcrypt.hash(password, 10);
     await user.save();
-    await OtpCode.deleteMany({ email: user.recoveryEmail, purpose: 'reset' });
     res.json({ ok: true });
   }),
 );
@@ -253,6 +279,7 @@ authRouter.post(
 // 1-р алхам: шинэ Gmail рүү код илгээнэ
 authRouter.post(
   '/recovery-email/request-otp',
+  otpRequestLimiter,
   requireAuth,
   asyncHandler(async (req, res) => {
     const { newEmail } = z.object({ newEmail: z.string().email() }).parse(req.body);
@@ -271,11 +298,12 @@ authRouter.post(
 // 2-р алхам: код баталгаажуулж шинэ Gmail-ийг хадгална
 authRouter.post(
   '/recovery-email/verify',
+  otpVerifyLimiter,
   requireAuth,
   asyncHandler(async (req, res) => {
     const { code } = z.object({ code: z.string().length(6) }).parse(req.body);
-    const otp = await OtpCode.findOne({ user: req.userId, purpose: 'change-email', code });
-    if (!otp) {
+    const otp = await consumeOtp({ user: req.userId!, purpose: 'change-email' }, code);
+    if (!otp.ok) {
       res.status(400).json({ error: 'Код буруу эсвэл хугацаа дууссан байна' });
       return;
     }
@@ -286,7 +314,6 @@ authRouter.post(
     }
     user.recoveryEmail = otp.email;
     await user.save();
-    await OtpCode.deleteMany({ user: req.userId, purpose: 'change-email' });
     res.json({ ok: true, recoveryEmail: user.recoveryEmail });
   }),
 );
@@ -396,5 +423,26 @@ authRouter.post(
     }
     await deleteStoredImage(previousPublicId, previousAvatar).catch(() => {});
     res.json({ user: userPayload(user) });
+  }),
+);
+
+// Бүртгэл бүрмөсөн устгах — нууц үгээр баталгаажуулна.
+authRouter.delete(
+  '/me',
+  requireAuth,
+  loginLimiter,
+  asyncHandler(async (req, res) => {
+    const { password } = z.object({ password: z.string().min(1) }).parse(req.body);
+    const user = await User.findById(req.userId).select('+passwordHash');
+    if (!user) {
+      res.status(404).json({ error: 'Хэрэглэгч олдсонгүй' });
+      return;
+    }
+    if (!(await bcrypt.compare(password, user.passwordHash))) {
+      res.status(400).json({ error: 'Нууц үг буруу байна' });
+      return;
+    }
+    await deleteAccount(user._id.toString());
+    res.json({ ok: true });
   }),
 );

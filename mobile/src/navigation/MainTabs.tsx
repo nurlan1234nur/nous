@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { addNotificationTapListener, registerForPushNotifications, setChatVisible } from '../lib/notifications';
 import { ChatScreen } from '../screens/ChatScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MemoriesScreen } from '../screens/MemoriesScreen';
@@ -33,11 +35,25 @@ function renderScreen(tab: TabKey) {
 
 export function MainTabs() {
   const [activeTab, setActiveTab] = useState<TabKey>('home');
+  const insets = useSafeAreaInsets();
+
+  // Хос холбогдсоны дараа push зөвшөөрөл асууж token бүртгэнэ; notification дарвал чат руу орно.
+  useEffect(() => {
+    void registerForPushNotifications().catch((err) => console.warn('[push]', err));
+    return addNotificationTapListener((data) => {
+      if (data.type === 'message' || data.url === '/chat') setActiveTab('chat');
+    });
+  }, []);
+
+  useEffect(() => {
+    setChatVisible(activeTab === 'chat');
+    return () => setChatVisible(false);
+  }, [activeTab]);
 
   return (
-    <View style={styles.shell}>
+    <View style={[styles.shell, { paddingTop: insets.top }]}>
       <View style={styles.content}>{renderScreen(activeTab)}</View>
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { marginBottom: Math.max(insets.bottom, 12) }]}>
         {tabs.map((tab) => {
           const active = tab.key === activeTab;
           return (

@@ -8,6 +8,7 @@ const otpSchema = new Schema({
   purpose: { type: String, enum: ['register', 'reset', 'change-email'], required: true },
   user: { type: Schema.Types.ObjectId, ref: 'User', default: null }, // reset/change-email-д хэрэглэгчтэй холбоно
   expiresAt: { type: Date, required: true },
+  attempts: { type: Number, default: 0 }, // буруу оролдлогын тоо (brute-force хамгаалалт)
   createdAt: { type: Date, default: Date.now },
 });
 

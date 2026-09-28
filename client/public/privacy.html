@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>nous — Нууцлалын бодлого</title>
+  <style>
+    :root { --rose: #e8607a; --deep: #2d1f2e; --muted: #7a6972; --cream: #fdf6f0; --card: #fff8f5; --line: #f5c6ce; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--cream); color: var(--deep); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 760px; margin: 0 auto; padding: 40px 20px 64px; }
+    h1 { color: var(--rose); font-style: italic; margin: 0 0 4px; font-size: 32px; }
+    h2 { font-size: 19px; margin: 32px 0 8px; }
+    .meta { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 4px 20px 16px; margin-top: 24px; }
+    ul { padding-left: 20px; }
+    li { margin: 4px 0; }
+    a { color: var(--rose); }
+    hr { border: 0; border-top: 1px solid var(--line); margin: 48px 0 24px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>nous</h1>
+  <div class="meta">Нууцлалын бодлого · Сүүлд шинэчилсэн: 2026-09-28</div>
+
+  <p>nous нь хосуудад зориулсан хувийн апп юм. Бид таны мэдээллийг зөвхөн апп ажиллахад шаардлагатай хэмжээнд цуглуулж, хэнд ч худалдахгүй, зар сурталчилгаанд ашиглахгүй.</p>
+
+  <h2>1. Бид ямар мэдээлэл цуглуулдаг вэ</h2>
+  <ul>
+    <li><b>Бүртгэлийн мэдээлэл:</b> нэвтрэх нэр, нууц үгийн hash (нууц үг өөрөө хадгалагдахгүй), сэргээх Gmail хаяг.</li>
+    <li><b>Профайл:</b> нэр, avatar (emoji эсвэл зураг), статус, төрсөн өдөр, өнгөний сонголт.</li>
+    <li><b>Таны оруулсан агуулга:</b> зурвас, зураг, дурсамж, өдрийн асуултын хариулт, сэтгэл санаа, хүсэл, захидал, капсул, тоглоомын өгөгдөл.</li>
+    <li><b>Техникийн мэдээлэл:</b> push notification token (утсанд мэдэгдэл илгээхэд), сүүлд онлайн байсан хугацаа, хүсэлтийн IP хаяг (зөвхөн хамгаалалт, хязгаарлалтад, түр хугацаагаар).</li>
+  </ul>
+  <p>Бид байршил, харилцагчийн жагсаалт, микрофон, камерын мэдээлэл цуглуулдаггүй. Зургийн сан руу зөвхөн таны сонгосон зургийг оруулах үед л ханддаг.</p>
+
+  <h2>2. Хэн харах вэ</h2>
+  <p>Таны агуулгыг зөвхөн та болон таны холбогдсон хамтрагч харна. Өөр хосууд таны өгөгдөлд хандах боломжгүй.</p>
+
+  <h2>3. Гуравдагч үйлчилгээ</h2>
+  <ul>
+    <li><b>Google Gmail (SMTP)</b> — баталгаажуулах код илгээхэд.</li>
+    <li><b>Expo / Apple Push Notification service / Firebase Cloud Messaging</b> — утсанд мэдэгдэл хүргэхэд. Мэдэгдэлд илгээгчийн нэр, зурвасын эхний хэсэг орно.</li>
+    <li><b>Cloudinary</b> (ашиглаж байгаа тохиолдолд) — зураг хадгалахад.</li>
+  </ul>
+
+  <h2>4. Хадгалалт ба хамгаалалт</h2>
+  <p>Өгөгдөл манай серверт хадгалагдаж, HTTPS-ээр дамжина. Нууц үг bcrypt-ээр hash хийгддэг. Утсан дээрх нэвтрэлтийн token нь төхөөрөмжийн аюулгүй санд (Keychain / Keystore) хадгалагдана.</p>
+
+  <h2>5. Бүртгэл ба өгөгдөл устгах</h2>
+  <p>Апп доторх <b>More → Бүртгэл устгах</b> хэсгээс нууц үгээ оруулж бүртгэлээ хэзээ ч бүрмөсөн устгаж болно. Ингэхэд:</p>
+  <ul>
+    <li>Таны профайл, push token, баталгаажуулах кодууд шууд устна.</li>
+    <li>Хамтрагч тань апп-д үлдсэн бол хосын хамтын агуулга (зурвас, дурсамж) түүнд үлдэнэ.</li>
+    <li>Хосын сүүлийн гишүүн бүртгэлээ устгахад хосын бүх өгөгдөл, зураг бүрмөсөн устна.</li>
+  </ul>
+  <p>Чатыг бүхэлд нь цэвэрлэх, өөрийн зурвас/дурсамжийг устгах боломж мөн апп дотор бий.</p>
+
+  <h2>6. Хүүхэд</h2>
+  <p>nous нь 13 наснаас доош хүүхдэд зориулагдаагүй.</p>
+
+  <h2>7. Холбоо барих</h2>
+  <p>Асуулт, хүсэлт байвал: <a href="mailto:privacy@nous.mn">privacy@nous.mn</a></p>
+
+  <hr />
+
+  <h2 lang="en">Privacy Policy (English summary)</h2>
+  <div lang="en">
+    <p>nous is a private app for couples. We collect only what the app needs: account data (username, password hash, recovery Gmail), profile data, the content you and your partner create (messages, photos, memories, answers, games), push notification tokens and last-seen time. Only you and your linked partner can see your content. We do not sell data or use it for advertising.</p>
+    <p>Third parties: Gmail SMTP (verification codes), Expo / APNs / FCM (push notifications; they include the sender name and a message preview), and Cloudinary if enabled (image storage). Data is transmitted over HTTPS; passwords are hashed with bcrypt; mobile session tokens are kept in the device Keychain/Keystore.</p>
+    <p>You can permanently delete your account at any time in <b>More → Бүртгэл устгах</b>. Your profile and tokens are deleted immediately; shared couple content remains for your partner, and is fully deleted when the last member deletes their account. Not intended for children under 13. Contact: <a href="mailto:privacy@nous.mn">privacy@nous.mn</a>.</p>
+  </div>
+</main>
+</body>
+</html>

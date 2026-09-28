@@ -5,6 +5,7 @@ import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import type { BattleshipGame, BattleshipShot } from '../types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Cell = { x: number; y: number };
 type Rotation = 0 | 90 | 180 | 270;
@@ -29,6 +30,7 @@ function planePreviewCells(rotation: Rotation): Cell[] {
 }
 
 export function BattleshipSection() {
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { partner } = useCouple();
   const [open, setOpen] = useState(false);
@@ -164,7 +166,7 @@ export function BattleshipSection() {
 
       <Modal animationType="slide" onRequestClose={closeGame} visible={open}>
         <View style={styles.screen}>
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
             <View>
               <Text style={styles.title}>Онгоц буудах</Text>
               <Text style={styles.subtitle}>Толгойг нь оновол ялна</Text>

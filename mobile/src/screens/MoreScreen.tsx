@@ -11,6 +11,11 @@ import { NumberGuessSection } from '../components/NumberGuessSection';
 import { SongOfUsSection } from '../components/SongOfUsSection';
 import { TimeCapsuleSection } from '../components/TimeCapsuleSection';
 import { WhoIsMoreSection } from '../components/WhoIsMoreSection';
+import { DeleteAccountSection } from '../components/DeleteAccountSection';
+import { AvatarView } from '../components/AvatarView';
+import { apiUpload } from '../lib/api';
+import { imageFormData, pickImage } from '../lib/image';
+import { isImageAvatar } from '../lib/format';
 
 const THEME_OPTIONS = ['rose', 'sunset', 'ocean', 'violet', 'forest'] as const;
 
@@ -143,6 +148,24 @@ export function MoreScreen() {
     }
   }
 
+  async function uploadAvatar() {
+    setError('');
+    setMessage('');
+    try {
+      const part = await pickImage('avatar');
+      if (!part) return;
+      setBusy(true);
+      const response = await apiUpload<{ user: { avatar: string } }>('/auth/me/avatar', imageFormData(part));
+      setProfileAvatar(response.user.avatar);
+      await refresh();
+      setMessage('Профайл зураг шинэчлэгдлээ.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not upload avatar');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function saveProfile() {
     setError('');
     setMessage('');
@@ -223,7 +246,7 @@ export function MoreScreen() {
         {message ? <Text style={styles.message}>{message}</Text> : null}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user?.avatar || user?.name?.slice(0, 1).toUpperCase() || 'N'}</Text>
+            <AvatarView avatar={user?.avatar} fallback="N" name={user?.name} size={48} textStyle={styles.avatarText} />
           </View>
           <View style={styles.profileText}>
             <Text style={styles.name}>{user?.name}</Text>
@@ -236,7 +259,19 @@ export function MoreScreen() {
         {profileOpen ? (
           <View style={styles.form}>
             <TextInput editable={!busy} onChangeText={setProfileName} placeholder="Name" placeholderTextColor="#9b8a93" style={styles.passwordInput} value={profileName} />
-            <TextInput editable={!busy} onChangeText={setProfileAvatar} placeholder="Avatar text or emoji" placeholderTextColor="#9b8a93" style={styles.passwordInput} value={profileAvatar} />
+            {isImageAvatar(profileAvatar) ? null : (
+              <TextInput editable={!busy} onChangeText={setProfileAvatar} placeholder="Avatar text or emoji" placeholderTextColor="#9b8a93" style={styles.passwordInput} value={profileAvatar} />
+            )}
+            <Pressable disabled={busy} onPress={() => void uploadAvatar()} style={styles.inlineButton}>
+              <Text style={styles.inlineButtonText}>
+                {isImageAvatar(profileAvatar) ? 'Зургаа солих' : 'Зураг оруулах'}
+              </Text>
+            </Pressable>
+            {isImageAvatar(profileAvatar) ? (
+              <Pressable disabled={busy} onPress={() => setProfileAvatar('💛')} style={styles.inlineButton}>
+                <Text style={styles.inlineButtonText}>Зургийг emoji-оор солих</Text>
+              </Pressable>
+            ) : null}
             <TextInput editable={!busy} maxLength={120} onChangeText={setProfileStatus} placeholder="Status" placeholderTextColor="#9b8a93" style={styles.passwordInput} value={profileStatus} />
             <TextInput
               editable={!busy}
@@ -402,6 +437,7 @@ export function MoreScreen() {
       <Pressable onPress={logout} style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
         <Text style={styles.logoutText}>Log out</Text>
       </Pressable>
+      <DeleteAccountSection />
     </ScrollView>
   );
 }
@@ -414,7 +450,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
     paddingBottom: 32,
-    paddingTop: 72,
+    paddingTop: 24,
   },
   title: {
     color: '#2d1f2e',

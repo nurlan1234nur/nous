@@ -18,6 +18,24 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return;
   }
 
+  // Буруу ObjectId (жнь /api/moments/abc) — 500 биш 400 буцаана.
+  if (typeof err === 'object' && err !== null && (err as { name?: string }).name === 'CastError') {
+    res.status(400).json({ error: 'Буруу ID' });
+    return;
+  }
+
+  // JSON body parse алдаа
+  if (typeof err === 'object' && err !== null && (err as { type?: string }).type === 'entity.parse.failed') {
+    res.status(400).json({ error: 'Буруу JSON' });
+    return;
+  }
+
+  // Зөвшөөрөгдөөгүй файлын төрөл (upload fileFilter)
+  if (err instanceof Error && err.message === 'Зөвхөн зураг оруулах боломжтой') {
+    res.status(400).json({ error: err.message });
+    return;
+  }
+
   // Multer (зураг upload) алдаа — хэт том файл г.м.
   if (typeof err === 'object' && err !== null && (err as { name?: string }).name === 'MulterError') {
     const code = (err as { code?: string }).code;

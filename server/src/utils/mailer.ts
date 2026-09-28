@@ -22,6 +22,11 @@ export async function sendOtpEmail(to: string, code: string, purpose: string): P
   const title = PURPOSE_TEXT[purpose] ?? 'Баталгаажуулах код';
 
   if (!transporter) {
+    if (process.env.NODE_ENV === 'production') {
+      // eslint-disable-next-line no-console
+      console.error('[MAIL] GMAIL_USER/GMAIL_APP_PASSWORD тохируулаагүй — OTP илгээгдсэнгүй');
+      return false;
+    }
     // eslint-disable-next-line no-console
     console.log(`\n[DEV OTP] → ${to} | ${purpose} | код: ${code}\n`);
     return false;
@@ -48,7 +53,10 @@ export async function sendOtpEmail(to: string, code: string, purpose: string): P
     // Имэйл илгээж чадсангүй (ж: буруу App Password) — кодыг log-д үлдээж,
     // бүртгэл эвдрэхээс сэргийлж false буцаана (код дэлгэцэнд гарна).
     // eslint-disable-next-line no-console
-    console.error(`[MAIL ERROR] → ${to}: ${(err as Error).message}\n[FALLBACK OTP] код: ${code}`);
+    console.error(
+      `[MAIL ERROR] → ${to}: ${(err as Error).message}` +
+        (process.env.NODE_ENV === 'production' ? '' : `\n[FALLBACK OTP] код: ${code}`),
+    );
     return false;
   }
 }

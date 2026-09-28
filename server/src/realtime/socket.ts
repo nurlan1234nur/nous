@@ -78,6 +78,11 @@ export function initSocket(server: HttpServer): void {
     bumpPresence(coupleId, userId, 1);
     io?.to(coupleRoom(coupleId)).emit('presence', presencePayload(coupleId));
 
+    // Listener-ээ холболтын дараа бүртгэсэн client (жнь mobile) одоогийн төлвийг асууна.
+    socket.on('presence:get', () => {
+      socket.emit('presence', presencePayload(coupleId));
+    });
+
     socket.on('typing', (isTyping: boolean) => {
       socket.to(coupleRoom(coupleId)).emit('partner:typing', isTyping);
     });

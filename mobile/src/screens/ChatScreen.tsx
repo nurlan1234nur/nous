@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -12,29 +14,40 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
-import { api } from '../lib/api';
+import { api, apiUpload, assetUrl } from '../lib/api';
 import { getSocket } from '../lib/socket';
+import { partnerSawMessage, prependUnique, presenceLabel, upsertById } from '../lib/format';
+import { imageFormData, pickImage } from '../lib/image';
+import { useResync } from '../hooks/useResync';
+import { AvatarView } from '../components/AvatarView';
+import { SharedMediaModal } from '../components/SharedMediaModal';
+import { PartnerProfileModal } from '../components/PartnerProfileModal';
 import type { Message } from '../types';
 
 export function ChatScreen() {
   const { user } = useAuth();
-  const { partner } = useCouple();
+  const { partner, onlineIds, lastSeen } = useCouple();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [partnerReadAt, setPartnerReadAt] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [mediaOpen, setMediaOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const listRef = useRef<FlatList<Message>>(null);
 
-  const loadMessages = useCallback(async () => {
-    setLoading(true);
+  const loadMessages = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError('');
     try {
-      const response = await api<{ messages: Message[] }>('/messages');
+      const response = await api<{ messages: Message[]; hasMore?: boolean }>('/messages?limit=50');
       setMessages(response.messages);
+      setHasMore(Boolean(response.hasMore));
       await api('/messages/read', { method: 'POST' }).catch(() => {});
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not load messages');
@@ -47,6 +60,26 @@ export function ChatScreen() {
     void loadMessages();
   }, [loadMessages]);
 
+  // Background-оос буцах / socket дахин холбогдоход алдсан зурвасуудыг татна.
+  useResync(() => void loadMessages(true));
+
+  async function loadOlder() {
+    const oldest = messages[0];
+    if (!oldest || loadingOlder) return;
+    setLoadingOlder(true);
+    try {
+      const response = await api<{ messages: Message[]; hasMore?: boolean }>(
+        `/messages?limit=50&before=${encodeURIComponent(oldest.createdAt)}`,
+      );
+      setMessages((current) => prependUnique(response.messages, current));
+      setHasMore(Boolean(response.hasMore));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not load messages');
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
+
   useEffect(() => {
     let mounted = true;
     let cleanup: (() => void) | undefined;
@@ -55,7 +88,7 @@ export function ChatScreen() {
       .then((socket) => {
         if (!mounted) return;
         const onMessage = (message: Message) => {
-          setMessages((current) => (current.some((item) => item._id === message._id) ? current : [...current, message]));
+          setMessages((current) => upsertById(current, message));
           if (message.sender._id !== user?.id) void api('/messages/read', { method: 'POST' }).catch(() => {});
         };
         const onUpdate = (message: Message) => {
@@ -88,11 +121,13 @@ export function ChatScreen() {
     };
   }, [user?.id]);
 
+  // Шинэ зурвас ирэхэд л доош гүйлгэнэ (хуучныг ачаалахад биш).
+  const lastId = messages[messages.length - 1]?._id;
   useEffect(() => {
-    if (messages.length) {
+    if (lastId) {
       requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
     }
-  }, [messages.length]);
+  }, [lastId]);
 
   async function send() {
     const value = text.trim();
@@ -105,13 +140,57 @@ export function ChatScreen() {
         method: 'POST',
         body: JSON.stringify({ text: value }),
       });
-      setMessages((current) => (current.some((item) => item._id === response.message._id) ? current : [...current, response.message]));
+      setMessages((current) => upsertById(current, response.message));
       void getSocket().then((socket) => socket.emit('typing', false)).catch(() => {});
     } catch (err) {
       setText(value);
       setError(err instanceof Error ? err.message : 'Could not send message');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function sendImage() {
+    setError('');
+    try {
+      const part = await pickImage('chat');
+      if (!part) return;
+      setBusy(true);
+      const caption = text.trim();
+      const response = await apiUpload<{ message: Message }>('/messages/image', imageFormData(part, caption ? { caption } : {}));
+      if (caption) setText('');
+      setMessages((current) => upsertById(current, response.message));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send image');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openMenu() {
+    Alert.alert('Чат', undefined, [
+      { text: 'Хуваалцсан зургууд', onPress: () => setMediaOpen(true) },
+      {
+        text: 'Чат цэвэрлэх',
+        style: 'destructive',
+        onPress: () =>
+          Alert.alert('Чатыг бүхэлд нь цэвэрлэх үү?', 'Хоёулангийн бүх зурвас, зураг устна. Буцаах боломжгүй.', [
+            { text: 'Болих', style: 'cancel' },
+            { text: 'Цэвэрлэх', style: 'destructive', onPress: () => void clearChat() },
+          ]),
+      },
+      { text: 'Болих', style: 'cancel' },
+    ]);
+  }
+
+  async function clearChat() {
+    setError('');
+    try {
+      await api('/messages', { method: 'DELETE' });
+      setMessages([]);
+      setHasMore(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not clear chat');
     }
   }
 
@@ -128,21 +207,35 @@ export function ChatScreen() {
 
   const myMessages = messages.filter((message) => message.sender._id === user?.id && !message.deleted);
   const lastMine = myMessages[myMessages.length - 1];
-  const partnerSawLast =
-    Boolean(lastMine && partnerReadAt) &&
-    new Date(partnerReadAt as string).getTime() >= new Date(lastMine?.createdAt ?? 0).getTime();
+  const partnerSawLast = partnerSawMessage(partnerReadAt ?? partner?.lastReadAt, lastMine?.createdAt);
+  const partnerOnline = Boolean(partner && onlineIds.includes(partner._id));
+  const partnerStatus = partner
+    ? presenceLabel(partnerOnline, lastSeen[partner._id] ?? partner.lastSeenAt)
+    : 'Хамтрагч хараахан нэгдээгүй';
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{partner?.avatar || partner?.name?.slice(0, 1).toUpperCase() || '?'}</Text>
-        </View>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>{partner?.name ?? 'Chat'}</Text>
-          <Text style={styles.subtitle}>Text chat migration</Text>
-        </View>
+        <Pressable
+          accessibilityLabel="Хамтрагчийн профайл"
+          disabled={!partner}
+          onPress={() => setProfileOpen(true)}
+          style={styles.headerProfile}
+        >
+          <View style={styles.avatar}>
+            <AvatarView avatar={partner?.avatar} name={partner?.name} size={44} textStyle={styles.avatarText} />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>{partner?.name ?? 'Chat'}</Text>
+            <Text style={[styles.subtitle, partnerOnline && styles.onlineText]}>{partnerStatus}</Text>
+          </View>
+        </Pressable>
+        <Pressable accessibilityLabel="Чатын цэс" hitSlop={8} onPress={openMenu} style={styles.menuButton}>
+          <Text style={styles.menuText}>⋯</Text>
+        </Pressable>
       </View>
+      <PartnerProfileModal onClose={() => setProfileOpen(false)} open={profileOpen} />
+      <SharedMediaModal onClose={() => setMediaOpen(false)} open={mediaOpen} />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -163,6 +256,17 @@ export function ChatScreen() {
               </View>
             ) : null
           }
+          ListHeaderComponent={
+            hasMore ? (
+              <Pressable disabled={loadingOlder} onPress={() => void loadOlder()} style={styles.olderButton}>
+                {loadingOlder ? (
+                  <ActivityIndicator color="#e8607a" />
+                ) : (
+                  <Text style={styles.olderText}>Өмнөх зурвасууд</Text>
+                )}
+              </Pressable>
+            ) : null
+          }
           keyExtractor={(item) => item._id}
           ref={listRef}
           renderItem={({ item }) => {
@@ -175,9 +279,19 @@ export function ChatScreen() {
                   onPress={() => setConfirmDeleteId((current) => (current === item._id ? null : item._id))}
                   style={[styles.bubble, mine ? styles.mineBubble : styles.partnerBubble, item.deleted && styles.deletedBubble]}
                 >
-                  <Text style={[styles.messageText, mine && !item.deleted && styles.mineText]}>
-                    {item.deleted ? `${item.sender.name} deleted a message` : item.text}
-                  </Text>
+                  {!item.deleted && item.imageUrl ? (
+                    <Image
+                      accessibilityLabel="Зураг"
+                      resizeMode="cover"
+                      source={{ uri: assetUrl(item.imageUrl) }}
+                      style={styles.messageImage}
+                    />
+                  ) : null}
+                  {item.deleted || item.text ? (
+                    <Text style={[styles.messageText, mine && !item.deleted && styles.mineText]}>
+                      {item.deleted ? `${item.sender.name} deleted a message` : item.text}
+                    </Text>
+                  ) : null}
                 </Pressable>
                 {confirmDeleteId === item._id && mine && !item.deleted ? (
                   <View style={styles.deleteConfirm}>
@@ -197,6 +311,14 @@ export function ChatScreen() {
       )}
 
       <View style={styles.composer}>
+        <Pressable
+          accessibilityLabel="Зураг илгээх"
+          disabled={busy}
+          onPress={() => void sendImage()}
+          style={({ pressed }) => [styles.attachButton, pressed && styles.pressed, busy && styles.disabled]}
+        >
+          <Text style={styles.attachText}>+</Text>
+        </Pressable>
         <TextInput
           editable={!busy}
           onBlur={() => void getSocket().then((socket) => socket.emit('typing', false)).catch(() => {})}
@@ -228,6 +350,56 @@ export function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerProfile: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    gap: 12,
+  },
+  menuButton: {
+    alignItems: 'center',
+    borderRadius: 18,
+    height: 36,
+    justifyContent: 'center',
+    width: 36,
+  },
+  menuText: {
+    color: '#e8607a',
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  onlineText: {
+    color: '#3a9d6a',
+  },
+  olderButton: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  olderText: {
+    color: '#e8607a',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  messageImage: {
+    borderRadius: 14,
+    height: 220,
+    marginBottom: 4,
+    width: 220,
+  },
+  attachButton: {
+    alignItems: 'center',
+    backgroundColor: '#f9ede6',
+    borderRadius: 22,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
+  attachText: {
+    color: '#e8607a',
+    fontSize: 26,
+    fontWeight: '700',
+    lineHeight: 28,
+  },
   screen: {
     backgroundColor: '#fdf6f0',
     flex: 1,
@@ -241,7 +413,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 18,
     paddingBottom: 14,
-    paddingTop: 58,
+    paddingTop: 14,
     shadowColor: '#2d1f2e',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.06,

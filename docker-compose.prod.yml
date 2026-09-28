@@ -23,6 +23,16 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_EXPIRES_IN: 7d
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://116.206.83.75:8300}
+      # Production-д OTP кодыг API хариунд буцаахгүй тул бүртгэл/нууц үг сэргээхэд Gmail заавал хэрэгтэй.
+      GMAIL_USER: ${GMAIL_USER:-}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@nous.mn}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
     expose:
       - "4000"
     volumes:
