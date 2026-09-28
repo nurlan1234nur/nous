@@ -163,7 +163,7 @@ npm.cmd --prefix mobile run start -- --clear --tunnel
 
 ### 4. Expo Go version асуудал
 
-`Project is incompatible with this version of Expo Go` гэж гарвал project SDK болон Expo Go runtime таарахгүй байна гэсэн үг. Энэ project одоогоор Expo SDK 54 dependency set дээр тааруулсан. Expo Go update хийсний дараа ч асуудал гарвал:
+`Project is incompatible with this version of Expo Go` гэж гарвал project SDK болон Expo Go runtime таарахгүй байна гэсэн үг. Энэ project одоогоор Expo SDK 57 (React Native 0.86) дээр байна. iOS дээр Expo Go зөвхөн хамгийн сүүлийн SDK-г дэмждэг тул Expo шинэ SDK гаргахад `npx expo install expo@^<N>` + `npx expo install --fix`-ээр шинэчилнэ. Expo Go болон `npx expo login` хоёулаа нэг Expo account-аар нэвтэрсэн байх ёстой. Expo Go update хийсний дараа ч асуудал гарвал:
 
 ```powershell
 npm.cmd --prefix mobile run typecheck
@@ -254,6 +254,7 @@ password: password123
 | 2026-09-28 | Real-time засвар + профайл | `useSocketEvents` hook: таб солиход бусад дэлгэцийн socket listener устдаг алдааг засав; хамтрагчийн профайл, хуваалцсан зургийг серверээс pagination-тэй, Нууцлалын бодлогын холбоос |
 | 2026-09-28 | Theme өнгө | `src/theme`: web-тэй ижил 5 өнгө (Сарнай, Нар жаргах, Далай, Ягаан, Ой); `StyleSheet.create` → `themedStyles`, профайлд өнгө сонгоход апп даяар солигдоно, идэвхтэй таб хадгалагдана |
 | 2026-09-28 | Дуу апп дотор + logout таб | Song of Us-ийг `react-native-webview`-ээр апп дотор тоглуулна (YouTube линк задлагч тесттэй); logout хийхэд идэвхтэй таб Home болж цэвэрлэгдэнэ |
+| 2026-09-28 | Expo SDK 57 рүү шинэчлэв | iPhone-ы Expo Go SDK 57-г л дэмждэг болсон тул expo 57, React Native 0.86.3, React 19.2.3; jest-д `@react-native/jest-preset` нэмж, `react-test-renderer`-ийг React-тай ижил хувилбарт тогтоов |
 
 ## Working rules
 
