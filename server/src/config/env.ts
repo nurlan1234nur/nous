@@ -57,4 +57,6 @@ export const env = {
   // Expo push (native app). Access token заавал биш — Expo "enhanced security" асаасан үед л хэрэгтэй.
   expoAccessToken: process.env.EXPO_ACCESS_TOKEN ?? '',
   expoPushEnabled: process.env.EXPO_PUSH_ENABLED !== 'false',
+  // Яаралтай үед л true — /uploads-ийг нэвтрэлтгүй нээнэ (хуучин client-уудтай нийцүүлэх).
+  uploadsPublic: process.env.UPLOADS_PUBLIC === 'true',
 };

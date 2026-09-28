@@ -13,6 +13,11 @@ const messageSchema = new Schema(
   { timestamps: true },
 );
 
+messageSchema.index(
+  { couple: 1, imageUrl: 1 },
+  { partialFilterExpression: { imageUrl: { $gt: '' } } }, // /uploads эрхийн шалгалт (зөвхөн зурагтай)
+);
+
 export type MessageDoc = InferSchemaType<typeof messageSchema> & { _id: Types.ObjectId };
 
 export const Message = model('Message', messageSchema);

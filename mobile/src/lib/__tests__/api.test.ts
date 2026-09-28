@@ -1,7 +1,7 @@
 jest.mock('../../config/env', () => ({ API_ORIGIN: 'https://api.test' }));
 jest.mock('../tokenStorage', () => ({ getToken: jest.fn() }));
 
-import { api, ApiError, assetUrl, setUnauthorizedHandler } from '../api';
+import { api, ApiError, assetUrl, setMediaToken, setUnauthorizedHandler } from '../api';
 import { getToken } from '../tokenStorage';
 
 const mockedGetToken = getToken as jest.MockedFunction<typeof getToken>;
@@ -62,5 +62,16 @@ describe('assetUrl', () => {
     expect(assetUrl('https://res.cloudinary.com/x.jpg')).toBe('https://res.cloudinary.com/x.jpg');
     expect(assetUrl('💛')).toBe('💛');
     expect(assetUrl('')).toBe('');
+  });
+});
+
+describe('media token', () => {
+  afterEach(() => setMediaToken(null));
+
+  it('is appended only to uploaded files', () => {
+    setMediaToken('m.t/k+n');
+    expect(assetUrl('/uploads/a.jpg')).toBe('https://api.test/uploads/a.jpg?t=m.t%2Fk%2Bn');
+    expect(assetUrl('/privacy.html')).toBe('https://api.test/privacy.html');
+    expect(assetUrl('https://res.cloudinary.com/x.jpg')).toBe('https://res.cloudinary.com/x.jpg');
   });
 });

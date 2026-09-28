@@ -10,6 +10,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { deleteStoredImage, storeUploadedImage, upload } from '../config/uploads.js';
 import { sendOtpEmail } from '../utils/mailer.js';
 import { deleteAccount } from '../utils/accountDeletion.js';
+import { signMediaToken } from '../utils/mediaToken.js';
 import { todayStr } from '../data/questions.js';
 import { env } from '../config/env.js';
 import { loginLimiter, otpRequestLimiter, otpVerifyLimiter } from '../middleware/rateLimit.js';
@@ -64,6 +65,8 @@ function userPayload(user: {
 }) {
   return {
     id: user._id,
+    // Зураг (/uploads) нээх тусгай token — client-ууд зургийн URL-д ?t= болгон залгана.
+    mediaToken: signMediaToken(String(user._id)),
     email: user.email,
     name: user.name,
     avatar: user.avatar,

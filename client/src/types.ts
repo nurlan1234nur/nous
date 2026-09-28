@@ -2,6 +2,7 @@ export type Theme = 'rose' | 'sunset' | 'ocean' | 'violet' | 'forest';
 
 export interface User {
   id: string;
+  mediaToken?: string; // /uploads зургийг нээх token (?t=)
   email: string;
   name: string;
   avatar: string;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, setUnauthorizedHandler } from '../lib/api';
+import { api, setMediaToken, setUnauthorizedHandler } from '../lib/api';
 import { unregisterPushNotifications } from '../lib/notifications';
 import { disconnectSocket } from '../lib/socket';
 import { clearToken, getToken, setToken } from '../lib/tokenStorage';
@@ -20,23 +20,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Зургийн token-ийг хэрэглэгчтэй зэрэг шинэчилнэ (render-ээс өмнө — assetUrl шууд ашиглана).
+  function applyUser(next: User | null) {
+    setMediaToken(next?.mediaToken);
+    setUser(next);
+  }
+
   // Анхны ачаалалтаас бусад үед loading-г асаахгүй — эс бөгөөс AppShell spinner харуулж
   // бүх дэлгэцийг unmount хийн, профайл хадгалсны дараа Home tab руу үсэрдэг байсан.
   async function refresh() {
     try {
       const token = await getToken();
       if (!token) {
-        setUser(null);
+        applyUser(null);
         return;
       }
 
       const response = await api<{ user: User }>('/auth/me');
-      setUser(response.user);
+      applyUser(response.user);
     } catch (err) {
       // Зөвхөн token хүчингүй бол гаргана; сүлжээний түр алдаанд session-г хадгална.
       if ((err as { status?: number }).status === 401 || (err as { status?: number }).status === 404) {
         await clearToken();
-        setUser(null);
+        applyUser(null);
       }
     } finally {
       setLoading(false);
@@ -51,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       disconnectSocket();
-      void clearToken().finally(() => setUser(null));
+      void clearToken().finally(() => applyUser(null));
     });
     return () => setUnauthorizedHandler(null);
   }, []);
@@ -62,14 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, password }),
     });
     await setToken(response.token);
-    setUser(response.user);
+    applyUser(response.user);
   }
 
   async function logout() {
     await unregisterPushNotifications();
     disconnectSocket();
     await clearToken();
-    setUser(null);
+    applyUser(null);
   }
 
   // Бүртгэл бүрмөсөн устгах (App Store / Google Play шаардлага).
@@ -77,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api('/auth/me', { method: 'DELETE', body: JSON.stringify({ password }) });
     disconnectSocket();
     await clearToken();
-    setUser(null);
+    applyUser(null);
   }
 
   const value = useMemo<AuthState>(

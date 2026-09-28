@@ -15,6 +15,10 @@ export const logger = pino({
   },
 });
 
+export function redactUrl(url: string): string {
+  return url.replace(/([?&]t=)[^&]*/g, '$1[redacted]');
+}
+
 // HTTP хүсэлт бүрийн log (method, url, status, хугацаа). Health check-ийг алгасна.
 export const httpLogger = pinoHttp({
   logger,
@@ -22,7 +26,8 @@ export const httpLogger = pinoHttp({
   autoLogging: { ignore: (req: IncomingMessage) => req.url === '/api/health' },
   customLogLevel: (_req, res, err) => (err || res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info'),
   serializers: {
-    req: (req: { id: string; method: string; url: string }) => ({ id: req.id, method: req.method, url: req.url }),
+    // /uploads?t=<media token> — token-ийг log-д бичихгүй.
+    req: (req: { id: string; method: string; url: string }) => ({ id: req.id, method: req.method, url: redactUrl(req.url) }),
     res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
   },
 });

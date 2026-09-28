@@ -50,12 +50,23 @@ export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
 // Server-ийн статик зам (/uploads/...) — same-origin тул шууд буцаана.
 const ASSET_ORIGIN = import.meta.env.VITE_ASSET_ORIGIN?.replace(/\/$/, '') ?? '';
 
+// Зураг (/uploads) нь нэвтрэлттэй — server-ээс авсан media token-ийг URL-д залгана.
+// AuthContext хэрэглэгч солигдох бүрд шинэчилнэ.
+let mediaToken = '';
+
+export function setMediaToken(token: string | null | undefined): void {
+  mediaToken = token ?? '';
+}
+
+function withMediaToken(url: string): string {
+  if (!mediaToken) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}t=${encodeURIComponent(mediaToken)}`;
+}
+
 export function assetUrl(path: string): string {
   if (!path || path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:')) {
     return path;
   }
-  if (ASSET_ORIGIN && path.startsWith('/')) {
-    return `${ASSET_ORIGIN}${path}`;
-  }
-  return path;
+  const url = ASSET_ORIGIN && path.startsWith('/') ? `${ASSET_ORIGIN}${path}` : path;
+  return path.startsWith('/uploads/') ? withMediaToken(url) : url;
 }

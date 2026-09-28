@@ -21,6 +21,8 @@ const momentSchema = new Schema(
   { timestamps: true },
 );
 
+momentSchema.index({ couple: 1, imageUrl: 1 }); // /uploads эрхийн шалгалт
+
 export type MomentDoc = InferSchemaType<typeof momentSchema> & { _id: Types.ObjectId };
 
 export const Moment = model('Moment', momentSchema);
