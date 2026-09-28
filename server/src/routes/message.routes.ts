@@ -13,15 +13,26 @@ export const messageRouter = Router();
 
 messageRouter.use(requireAuth, requireCouple);
 
-// Сүүлийн зурвасууд (хуучнаас шинэ рүү).
+const listSchema = z.object({
+  limit: z.coerce.number().int().min(1).max(200).default(200),
+  before: z.coerce.date().optional(), // энэ огнооноос өмнөх зурвасууд (дээш гүйлгэхэд)
+});
+
+// Сүүлийн зурвасууд (хуучнаас шинэ рүү). Хамгийн шинэ `limit`-ийг авч эрэмбийг эргүүлнэ —
+// эс бөгөөс 200-аас олон зурвастай хосод шинэ зурвас харагдахгүй болно.
 messageRouter.get(
   '/',
   asyncHandler(async (req, res) => {
-    const messages = await Message.find({ couple: req.coupleId })
-      .sort({ createdAt: 1 })
-      .limit(200)
+    const { limit, before } = listSchema.parse(req.query);
+    const filter: Record<string, unknown> = { couple: req.coupleId };
+    if (before) filter.createdAt = { $lt: before };
+    const latest = await Message.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(limit + 1)
       .populate('sender', 'name avatar');
-    res.json({ messages });
+    const hasMore = latest.length > limit;
+    const messages = latest.slice(0, limit).reverse();
+    res.json({ messages, hasMore });
   }),
 );
 

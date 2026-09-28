@@ -5,6 +5,8 @@ import { requireAuth } from '../middleware/auth.js';
 import { env } from '../config/env.js';
 import { pushEnabled } from '../utils/push.js';
 import { WebPushSubscription } from '../models/WebPushSubscription.js';
+import { ExpoPushToken } from '../models/ExpoPushToken.js';
+import { isExpoPushToken } from '../utils/expoPush.js';
 
 export const notificationRouter = Router();
 
@@ -46,6 +48,36 @@ notificationRouter.delete(
   asyncHandler(async (req, res) => {
     const { endpoint } = z.object({ endpoint: z.string().url() }).parse(req.body);
     await WebPushSubscription.deleteOne({ user: req.userId, endpoint });
+    res.json({ ok: true });
+  }),
+);
+
+// ---- Native (Expo) push token ----
+
+const expoTokenSchema = z.object({
+  token: z.string().refine(isExpoPushToken, 'Expo push token биш байна'),
+  platform: z.enum(['ios', 'android', 'unknown']).optional(),
+});
+
+notificationRouter.post(
+  '/expo',
+  asyncHandler(async (req, res) => {
+    const { token, platform } = expoTokenSchema.parse(req.body);
+    // Төхөөрөмж өөр хэрэглэгчээр нэвтэрвэл token шинэ эзэндээ шилжинэ.
+    await ExpoPushToken.findOneAndUpdate(
+      { token },
+      { user: req.userId, token, platform: platform ?? 'unknown' },
+      { upsert: true, new: true },
+    );
+    res.status(201).json({ ok: true });
+  }),
+);
+
+notificationRouter.delete(
+  '/expo',
+  asyncHandler(async (req, res) => {
+    const { token } = z.object({ token: z.string().min(1) }).parse(req.body);
+    await ExpoPushToken.deleteOne({ user: req.userId, token });
     res.json({ ok: true });
   }),
 );
