@@ -66,7 +66,7 @@
 |----|-----------|:-:|:-:|:-:|:-:|
 | FUN-1 | Love Notes (түгжээтэй захидал) | ✅ | ✅ | ✅ | ✅ server |
 | FUN-2 | Time Capsule | ✅ | ✅ | ✅ | ✅ server |
-| FUN-3 | Song of Us (YouTube) | ✅ | ✅ | 🟡 (гадна нээнэ, mini player-гүй) | ⬜ |
+| FUN-3 | Song of Us (YouTube) — апп дотор тоглуулах | ✅ | ✅ | ✅ (modal дотор; background-д тоглохгүй) | ✅ mobile (линк задлагч) |
 | FUN-4 | Dream Jar (2/2 зөвшөөрөл) | ✅ | ✅ | ✅ | ✅ server |
 | GAME-1 | Хэн нь илүү | ✅ | ✅ | ✅ | ✅ server |
 | GAME-2 | Онгоц буудах | ✅ | ✅ | ✅ | ✅ server |
@@ -75,7 +75,7 @@
 ### 1.6 Web-д байгаа, mobile-д дутуу
 
 - Чатын wallpaper
-- Song mini player (app дотор тоглуулах; одоо YouTube-ийг гадна нээнэ)
+- Song mini player (бусад дэлгэц рүү шилжихэд үргэлжлэн тоглох)
 
 ---
 

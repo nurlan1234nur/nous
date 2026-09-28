@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { api, setMediaToken, setUnauthorizedHandler } from '../lib/api';
 import { unregisterPushNotifications } from '../lib/notifications';
 import { disconnectSocket } from '../lib/socket';
+import { resetLastTab } from '../navigation/tabState';
 import { clearToken, getToken, setToken } from '../lib/tokenStorage';
 import type { User } from '../types';
 
@@ -22,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Зургийн token-ийг хэрэглэгчтэй зэрэг шинэчилнэ (render-ээс өмнө — assetUrl шууд ашиглана).
   function applyUser(next: User | null) {
+    if (!next) resetLastTab();
     setMediaToken(next?.mediaToken);
     setUser(next);
   }

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, Text, TextInput, View } from 'react-native';
 import { api } from '../lib/api';
 import { useSocketEvents } from '../hooks/useSocketEvents';
 import type { WeeklySong } from '../types';
 import { themedStyles, colors } from '../theme';
+import { SongPlayerModal } from './SongPlayerModal';
 
 function weekLabel(value: string): string {
   return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -19,6 +20,7 @@ export function SongOfUsSection() {
   const [artist, setArtist] = useState('');
   const [url, setUrl] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState('');
+  const [playing, setPlaying] = useState<WeeklySong | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -201,8 +203,8 @@ export function SongOfUsSection() {
                       </View>
                     </View>
                     <View style={styles.songActions}>
-                      <Pressable onPress={() => void Linking.openURL(song.url)} style={styles.smallButton}>
-                        <Text style={styles.smallButtonText}>Open link</Text>
+                      <Pressable onPress={() => setPlaying(song)} style={styles.smallButton}>
+                        <Text style={styles.smallButtonText}>▶ Тоглуулах</Text>
                       </Pressable>
                       <Pressable onPress={() => editSong(song)} style={styles.smallButton}>
                         <Text style={styles.smallButtonText}>Edit</Text>
@@ -218,6 +220,7 @@ export function SongOfUsSection() {
           )}
         </View>
       ) : null}
+      <SongPlayerModal onClose={() => setPlaying(null)} song={playing} />
     </View>
   );
 }

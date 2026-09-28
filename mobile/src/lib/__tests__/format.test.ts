@@ -1,4 +1,4 @@
-import { dayLabel, daysSince, formatDate, groupByMonth, isImageAvatar, partnerSawMessage, prependUnique, presenceLabel, timeAgo, upsertById } from '../format';
+import { youtubeVideoId, dayLabel, daysSince, formatDate, groupByMonth, isImageAvatar, partnerSawMessage, prependUnique, presenceLabel, timeAgo, upsertById } from '../format';
 
 const NOW = new Date('2026-09-28T12:00:00Z').getTime();
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
@@ -83,5 +83,21 @@ describe('daysSince / formatDate', () => {
     expect(formatDate('2000-05-12')).toBe('2000.05.12');
     expect(formatDate('2024-02-14T00:00:00.000Z')).toBe('2024.02.14');
     expect(formatDate('')).toBe('');
+  });
+});
+
+describe('youtubeVideoId', () => {
+  it.each([
+    ['https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://youtube.com/watch?feature=share&v=dQw4w9WgXcQ&t=10', 'dQw4w9WgXcQ'],
+    ['https://m.youtube.com/watch?v=dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://youtu.be/dQw4w9WgXcQ?si=abc', 'dQw4w9WgXcQ'],
+    ['https://www.youtube.com/shorts/dQw4w9WgXcQ', 'dQw4w9WgXcQ'],
+    ['https://music.youtube.com/watch?v=dQw4w9WgXcQ&list=x', 'dQw4w9WgXcQ'],
+    ['https://open.spotify.com/track/abc', null],
+    ['https://evil.com/youtube.com/watch?v=dQw4w9WgXcQ', null],
+    ['', null],
+  ])('%s → %s', (url, id) => {
+    expect(youtubeVideoId(url)).toBe(id);
   });
 });
