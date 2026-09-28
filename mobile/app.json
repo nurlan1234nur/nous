@@ -51,7 +51,8 @@
         {
           "color": "#e8607a"
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "scheme": "nous",
     "splash": {
