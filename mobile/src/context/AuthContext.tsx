@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api } from '../lib/api';
+import { api, setUnauthorizedHandler } from '../lib/api';
+import { unregisterPushNotifications } from '../lib/notifications';
 import { disconnectSocket } from '../lib/socket';
 import { clearToken, getToken, setToken } from '../lib/tokenStorage';
 import type { User } from '../types';
@@ -9,6 +10,7 @@ interface AuthState {
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -41,6 +43,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, []);
 
+  // Token хугацаа дууссан/хүчингүй болсон үед (401) автоматаар гаргана.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      disconnectSocket();
+      void clearToken().finally(() => setUser(null));
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   async function login(username: string, password: string) {
     const response = await api<{ token: string; user: User }>('/auth/login', {
       method: 'POST',
@@ -51,13 +62,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
+    await unregisterPushNotifications();
+    disconnectSocket();
+    await clearToken();
+    setUser(null);
+  }
+
+  // Бүртгэл бүрмөсөн устгах (App Store / Google Play шаардлага).
+  async function deleteAccount(password: string) {
+    await api('/auth/me', { method: 'DELETE', body: JSON.stringify({ password }) });
     disconnectSocket();
     await clearToken();
     setUser(null);
   }
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, login, logout, refresh }),
+    () => ({ user, loading, login, logout, deleteAccount, refresh }),
     [user, loading],
   );
 

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api, assetUrl } from '../lib/api';
 import { getSocket } from '../lib/socket';
+import { useResync } from '../hooks/useResync';
 import type { DailyQuestion, Moment, Mood } from '../types';
 
 const moodOptions = [
@@ -56,6 +57,8 @@ export function HomeScreen() {
   useEffect(() => {
     void loadHome();
   }, [loadHome]);
+
+  useResync(() => void loadHome());
 
   useEffect(() => {
     let active = true;
@@ -235,7 +238,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 18,
-    paddingTop: 28,
+    paddingTop: 12,
     paddingBottom: 24,
   },
   header: {

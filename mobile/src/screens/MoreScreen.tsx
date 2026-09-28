@@ -11,6 +11,7 @@ import { NumberGuessSection } from '../components/NumberGuessSection';
 import { SongOfUsSection } from '../components/SongOfUsSection';
 import { TimeCapsuleSection } from '../components/TimeCapsuleSection';
 import { WhoIsMoreSection } from '../components/WhoIsMoreSection';
+import { DeleteAccountSection } from '../components/DeleteAccountSection';
 
 const THEME_OPTIONS = ['rose', 'sunset', 'ocean', 'violet', 'forest'] as const;
 
@@ -402,6 +403,7 @@ export function MoreScreen() {
       <Pressable onPress={logout} style={({ pressed }) => [styles.logoutButton, pressed && styles.pressed]}>
         <Text style={styles.logoutText}>Log out</Text>
       </Pressable>
+      <DeleteAccountSection />
     </ScrollView>
   );
 }
@@ -414,7 +416,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
     paddingBottom: 32,
-    paddingTop: 72,
+    paddingTop: 24,
   },
   title: {
     color: '#2d1f2e',
