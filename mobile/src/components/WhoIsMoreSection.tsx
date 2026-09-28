@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import type { WhoIsMoreQuestion, WhoIsMoreQuiz, WhoIsMoreQuizSummary } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { themedStyles, colors } from '../theme';
 
 type Mode = 'list' | 'editor' | 'detail';
 type DraftQuestion = { text: string; options: string[]; correctIndex: number };
@@ -224,7 +225,7 @@ export function WhoIsMoreSection() {
                   </Pressable>
                 </View>
                 {loading ? (
-                  <ActivityIndicator color="#e8607a" style={styles.loading} />
+                  <ActivityIndicator color={colors.rose} style={styles.loading} />
                 ) : quizzes.length === 0 ? (
                   <Text style={styles.empty}>Одоогоор тест алга.</Text>
                 ) : (
@@ -353,7 +354,7 @@ export function WhoIsMoreSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   entryRow: {
     alignItems: 'center',
     backgroundColor: '#fff8f5',

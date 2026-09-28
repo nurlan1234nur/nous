@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -23,6 +22,7 @@ import { AvatarView } from '../components/AvatarView';
 import { SharedMediaModal } from '../components/SharedMediaModal';
 import { PartnerProfileModal } from '../components/PartnerProfileModal';
 import type { Message } from '../types';
+import { themedStyles, colors } from '../theme';
 
 export function ChatScreen() {
   const { user } = useAuth();
@@ -241,7 +241,7 @@ export function ChatScreen() {
 
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#e8607a" />
+          <ActivityIndicator color={colors.rose} />
         </View>
       ) : (
         <FlatList
@@ -260,7 +260,7 @@ export function ChatScreen() {
             hasMore ? (
               <Pressable disabled={loadingOlder} onPress={() => void loadOlder()} style={styles.olderButton}>
                 {loadingOlder ? (
-                  <ActivityIndicator color="#e8607a" />
+                  <ActivityIndicator color={colors.rose} />
                 ) : (
                   <Text style={styles.olderText}>Өмнөх зурвасууд</Text>
                 )}
@@ -349,7 +349,7 @@ export function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   headerProfile: {
     alignItems: 'center',
     flex: 1,

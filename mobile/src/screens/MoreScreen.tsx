@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
@@ -16,8 +16,8 @@ import { AvatarView } from '../components/AvatarView';
 import { apiUpload } from '../lib/api';
 import { imageFormData, pickImage } from '../lib/image';
 import { isImageAvatar } from '../lib/format';
+import { themedStyles, colors, THEMES, type ThemeId } from '../theme';
 
-const THEME_OPTIONS = ['rose', 'sunset', 'ocean', 'violet', 'forest'] as const;
 
 export function MoreScreen() {
   const { user, logout, refresh } = useAuth();
@@ -27,7 +27,7 @@ export function MoreScreen() {
   const [profileAvatar, setProfileAvatar] = useState('');
   const [profileStatus, setProfileStatus] = useState('');
   const [profileBirthday, setProfileBirthday] = useState('');
-  const [profileTheme, setProfileTheme] = useState<(typeof THEME_OPTIONS)[number]>('rose');
+  const [profileTheme, setProfileTheme] = useState<ThemeId>('rose');
   const [emailOpen, setEmailOpen] = useState(false);
   const [emailStep, setEmailStep] = useState<1 | 2>(1);
   const [newEmail, setNewEmail] = useState('');
@@ -226,7 +226,7 @@ export function MoreScreen() {
             <Text style={styles.rowLabel}>{'\u0423\u0440\u0438\u043b\u0433\u044b\u043d \u043a\u043e\u0434'}</Text>
             <Text selectable style={styles.codeValue}>{couple?.inviteCode ?? '-'}</Text>
           </View>
-          {coupleLoading ? <ActivityIndicator color="#e8607a" /> : <Text style={styles.badge}>Active</Text>}
+          {coupleLoading ? <ActivityIndicator color={colors.rose} /> : <Text style={styles.badge}>Active</Text>}
         </View>
         <View style={styles.row}>
           <View style={styles.iconBadge}>
@@ -283,11 +283,25 @@ export function MoreScreen() {
               value={profileBirthday}
             />
             <View style={styles.themeRow}>
-              {THEME_OPTIONS.map((theme) => (
-                <Pressable key={theme} onPress={() => setProfileTheme(theme)} style={[styles.themeButton, profileTheme === theme && styles.themeButtonActive]}>
-                  <Text style={[styles.themeText, profileTheme === theme && styles.themeTextActive]}>{theme}</Text>
-                </Pressable>
-              ))}
+              {THEMES.map((theme) => {
+                const active = profileTheme === theme.id;
+                return (
+                  <Pressable
+                    accessibilityLabel={`Өнгө: ${theme.name}`}
+                    accessibilityState={{ selected: active }}
+                    key={theme.id}
+                    onPress={() => setProfileTheme(theme.id)}
+                    style={[
+                      styles.themeButton,
+                      { borderColor: theme.palette.blush },
+                      active && { backgroundColor: theme.palette.rose, borderColor: theme.palette.rose },
+                    ]}
+                  >
+                    <View style={[styles.themeSwatch, { backgroundColor: active ? '#fff' : theme.palette.rose }]} />
+                    <Text style={[styles.themeText, active && styles.themeTextActive]}>{theme.name}</Text>
+                  </Pressable>
+                );
+              })}
             </View>
             <Pressable disabled={busy} onPress={saveProfile} style={({ pressed }) => [styles.saveButton, pressed && styles.pressed, busy && styles.disabled]}>
               {busy ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>Save profile</Text>}
@@ -442,7 +456,7 @@ export function MoreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     backgroundColor: '#fdf6f0',
     flex: 1,
@@ -583,7 +597,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
   },
+  themeSwatch: {
+    borderRadius: 7,
+    height: 14,
+    width: 14,
+  },
   themeButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
     backgroundColor: '#fdf6f0',
     borderColor: '#f5c6ce',
     borderRadius: 12,
@@ -599,7 +621,6 @@ const styles = StyleSheet.create({
     color: '#9b8a93',
     fontSize: 12,
     fontWeight: '900',
-    textTransform: 'capitalize',
   },
   themeTextActive: {
     color: '#fff',

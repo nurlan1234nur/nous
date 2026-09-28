@@ -252,6 +252,7 @@ password: password123
 | 2026-09-28 | Production суурь | Native push (Expo), safe area, 401 auto-logout, API timeout, socket reconnect/foreground resync, чатад зураг + онлайн төлөв + pagination, бүртгэл устгах, `app.json` bundle id/permission, `eas.json`, Jest тест нэмэв. Дэлгэрэнгүйг `REQUIREMENTS.md`-ээс |
 | 2026-09-28 | Parity нэмэлт | Өдрийн асуултын архив, профайл зураг upload, чатын цэс (хуваалцсан зургууд, чат цэвэрлэх); профайл хадгалахад app бүхэлдээ дахин ачаалагддаг алдааг засав |
 | 2026-09-28 | Real-time засвар + профайл | `useSocketEvents` hook: таб солиход бусад дэлгэцийн socket listener устдаг алдааг засав; хамтрагчийн профайл, хуваалцсан зургийг серверээс pagination-тэй, Нууцлалын бодлогын холбоос |
+| 2026-09-28 | Theme өнгө | `src/theme`: web-тэй ижил 5 өнгө (Сарнай, Нар жаргах, Далай, Ягаан, Ой); `StyleSheet.create` → `themedStyles`, профайлд өнгө сонгоход апп даяар солигдоно, идэвхтэй таб хадгалагдана |
 
 ## Working rules
 

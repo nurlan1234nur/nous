@@ -4,7 +4,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
   View,
@@ -12,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import type { Couple } from '../types';
+import { themedStyles } from '../theme';
 
 export function CoupleSetupScreen() {
   const { logout, refresh } = useAuth();
@@ -122,7 +122,7 @@ export function CoupleSetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     flex: 1,
     backgroundColor: '#fdf6f0',

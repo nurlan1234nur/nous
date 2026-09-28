@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { api, assetUrl } from '../lib/api';
+import { themedStyles, colors } from '../theme';
 
 interface MediaItem {
   _id: string;
@@ -59,9 +60,9 @@ export function SharedMediaModal({ open, onClose }: Props) {
           data={images}
           keyExtractor={(m) => m._id}
           ListEmptyComponent={
-            loading ? <ActivityIndicator color="#e8607a" style={styles.loader} /> : <Text style={styles.empty}>Одоохондоо зураг алга.</Text>
+            loading ? <ActivityIndicator color={colors.rose} style={styles.loader} /> : <Text style={styles.empty}>Одоохондоо зураг алга.</Text>
           }
-          ListFooterComponent={loading && images.length ? <ActivityIndicator color="#e8607a" style={styles.loader} /> : null}
+          ListFooterComponent={loading && images.length ? <ActivityIndicator color={colors.rose} style={styles.loader} /> : null}
           onEndReached={() => {
             if (hasMore && !loading) void load(images[images.length - 1]?.createdAt);
           }}
@@ -83,7 +84,7 @@ export function SharedMediaModal({ open, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: { backgroundColor: '#fdf6f0', flex: 1 },
   header: {
     alignItems: 'center',

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, SectionList, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { dayLabel, groupByMonth } from '../lib/format';
 import type { DailyHistoryDay } from '../types';
+import { themedStyles, colors } from '../theme';
 
 interface Props {
   open: boolean;
@@ -49,7 +50,7 @@ export function DailyArchiveModal({ open, onClose }: Props) {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {loading ? (
-          <ActivityIndicator color="#e8607a" style={styles.loader} />
+          <ActivityIndicator color={colors.rose} style={styles.loader} />
         ) : (
           <SectionList
             contentContainerStyle={[styles.list, { paddingBottom: insets.bottom + 24 }]}
@@ -86,7 +87,7 @@ function Answer({ name, text }: { name: string; text?: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: { backgroundColor: '#fdf6f0', flex: 1 },
   header: {
     alignItems: 'center',

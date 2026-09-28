@@ -74,7 +74,7 @@
 
 ### 1.6 Web-д байгаа, mobile-д дутуу
 
-- Чатын wallpaper, theme-ийн өнгийг UI-д хэрэглэх (одоо зөвхөн rose)
+- Чатын wallpaper
 - Song mini player (app дотор тоглуулах; одоо YouTube-ийг гадна нээнэ)
 
 ---
@@ -100,6 +100,7 @@
 | OBS-2 | Бүтэцтэй JSON log (pino, request id, token/нууц үг redact) | ✅ |
 | SCALE-1 | Presence санах ойд — 1-ээс олон server instance бол Redis adapter хэрэгтэй | ⬜ |
 | UX-1 | Safe area (notch, Dynamic Island, home indicator) | ✅ mobile |
+| UX-3 | Профайлд сонгосон өнгөний загвар (5 theme) апп даяар хэрэгжинэ | ✅ web + mobile |
 | UX-2 | Сүлжээгүй / timeout үед ойлгомжтой алдаа | ✅ mobile |
 | LEGAL-1 | Privacy Policy URL (`client/public/privacy.html` → `/privacy.html`; web/mobile-д холбоостой; холбоо барих имэйлийг солих үлдсэн) | 🟡 |
 | LEGAL-2 | Play Store Data safety, App Store Privacy nutrition label | ⬜ |

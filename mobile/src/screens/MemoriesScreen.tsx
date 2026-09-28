@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import { ActivityIndicator, Alert, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, Text, View } from 'react-native';
 import { TextInput } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api, apiUpload, assetUrl } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import { useResync } from '../hooks/useResync';
 import type { Moment } from '../types';
+import { themedStyles, colors } from '../theme';
 
 function monthLabel(value: string): string {
   const date = new Date(value);
@@ -183,7 +184,7 @@ export function MemoriesScreen() {
 
       {loading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#e8607a" />
+          <ActivityIndicator color={colors.rose} />
         </View>
       ) : (
         <FlatList
@@ -234,7 +235,7 @@ export function MemoriesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     backgroundColor: '#fdf6f0',
     flex: 1,

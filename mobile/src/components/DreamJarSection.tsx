@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { useSocketEvents } from '../hooks/useSocketEvents';
 import type { Wish } from '../types';
+import { themedStyles, colors } from '../theme';
 
 function sortWishes(wishes: Wish[]): Wish[] {
   return [...wishes].sort((a, b) => {
@@ -125,7 +126,7 @@ export function DreamJarSection() {
             </Pressable>
           </View>
           {loading ? (
-            <ActivityIndicator color="#e8607a" style={styles.loader} />
+            <ActivityIndicator color={colors.rose} style={styles.loader} />
           ) : wishes.length === 0 ? (
             <Text style={styles.empty}>No wishes yet.</Text>
           ) : (
@@ -159,7 +160,7 @@ export function DreamJarSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   wrap: {
     marginBottom: 10,
   },

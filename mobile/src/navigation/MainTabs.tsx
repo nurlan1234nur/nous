@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { addNotificationTapListener, registerForPushNotifications, setChatVisible } from '../lib/notifications';
 import { ChatScreen } from '../screens/ChatScreen';
@@ -7,6 +7,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { MemoriesScreen } from '../screens/MemoriesScreen';
 import { MoreScreen } from '../screens/MoreScreen';
 import { TimelineScreen } from '../screens/TimelineScreen';
+import { themedStyles } from '../theme';
 
 type TabKey = 'home' | 'timeline' | 'memories' | 'chat' | 'more';
 
@@ -33,8 +34,15 @@ function renderScreen(tab: TabKey) {
   }
 }
 
+// Theme солигдоход MainTabs дахин mount болдог тул идэвхтэй табыг component-оос гадна хадгална.
+let lastTab: TabKey = 'home';
+
 export function MainTabs() {
-  const [activeTab, setActiveTab] = useState<TabKey>('home');
+  const [activeTab, setActiveTabState] = useState<TabKey>(lastTab);
+  const setActiveTab = (tab: TabKey) => {
+    lastTab = tab;
+    setActiveTabState(tab);
+  };
   const insets = useSafeAreaInsets();
 
   // Хос холбогдсоны дараа push зөвшөөрөл асууж token бүртгэнэ; notification дарвал чат руу орно.
@@ -74,7 +82,7 @@ export function MainTabs() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   shell: {
     backgroundColor: '#fdf6f0',
     flex: 1,

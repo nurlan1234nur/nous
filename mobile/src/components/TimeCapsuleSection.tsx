@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import type { Capsule } from '../types';
+import { themedStyles, colors } from '../theme';
 
 function pad(value: number): string {
   return String(value).padStart(2, '0');
@@ -157,7 +158,7 @@ export function TimeCapsuleSection() {
                 <Text style={styles.primaryText}>New capsule</Text>
               </Pressable>
               {loading ? (
-                <ActivityIndicator color="#e8607a" style={styles.loader} />
+                <ActivityIndicator color={colors.rose} style={styles.loader} />
               ) : capsules.length === 0 ? (
                 <Text style={styles.empty}>No capsules yet.</Text>
               ) : (
@@ -195,7 +196,7 @@ export function TimeCapsuleSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   wrap: {
     marginBottom: 10,
   },
