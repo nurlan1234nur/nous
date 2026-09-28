@@ -14,9 +14,12 @@
     "build:client": "docker build -t nurlannn/love-client:latest ./client",
     "build:images": "npm run build:server && npm run build:client",
     "push:images": "docker push nurlannn/love-server:latest && docker push nurlannn/love-client:latest",
-    "release": "npm run build:images && npm run push:images"
+    "release": "npm run build:images && npm run push:images",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "wrangler": "^4.103.0"
   }
 }
