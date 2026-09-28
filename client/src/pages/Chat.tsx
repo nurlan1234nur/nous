@@ -39,6 +39,8 @@ export default function Chat() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [wallpaper, setWallpaperState] = useState(getWallpaper());
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -76,7 +78,10 @@ export default function Chat() {
   }
 
   useEffect(() => {
-    void api<{ messages: Message[] }>('/messages').then((r) => setMessages(r.messages));
+    void api<{ messages: Message[]; hasMore?: boolean }>('/messages?limit=100').then((r) => {
+      setMessages(r.messages);
+      setHasMore(Boolean(r.hasMore));
+    });
     markRead();
 
     const socket = getSocket();
@@ -109,10 +114,38 @@ export default function Chat() {
 
   // Зөвхөн зурвасны контейнерийг доош гүйлгэнэ (scrollIntoView нь PhoneFrame-ийг
   // дээш түрдэг тул ашиглахгүй — энэ нь ancestor-уудад тархахгүй).
+  // Шинэ зурвас ирэх үед л доош гүйлгэнэ — хуучин зурвас ачаалахад байрлал хадгалагдана.
+  const lastId = messages[messages.length - 1]?._id;
   useEffect(() => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages, partnerTyping]);
+  }, [lastId, partnerTyping]);
+
+  async function loadOlder() {
+    const oldest = messages[0];
+    const el = listRef.current;
+    if (!oldest || loadingOlder) return;
+    setLoadingOlder(true);
+    const prevHeight = el?.scrollHeight ?? 0;
+    try {
+      const r = await api<{ messages: Message[]; hasMore?: boolean }>(
+        `/messages?limit=100&before=${encodeURIComponent(oldest.createdAt)}`,
+      );
+      setMessages((prev) => {
+        const seen = new Set(prev.map((m) => m._id));
+        return [...r.messages.filter((m) => !seen.has(m._id)), ...prev];
+      });
+      setHasMore(Boolean(r.hasMore));
+      // Уншиж байсан газраа үлдэнэ (дээрээс нэмэгдсэн өндрийг нөхнө).
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight - prevHeight;
+      });
+    } catch {
+      toast('Өмнөх зурвасуудыг ачаалж чадсангүй');
+    } finally {
+      setLoadingOlder(false);
+    }
+  }
 
   async function send(value: string) {
     const v = value.trim();
@@ -282,6 +315,15 @@ export default function Chat() {
       >
         {/* Зурвас цөөн үед доош input дээр наалдуулна (дээшээ бөөгнөрөхгүй). */}
         <div className="mt-auto" />
+        {hasMore && !q && (
+          <button
+            onClick={() => void loadOlder()}
+            disabled={loadingOlder}
+            className="mx-auto mb-2 rounded-full bg-card px-4 py-1.5 text-xs font-bold text-rose shadow-sm disabled:opacity-50"
+          >
+            {loadingOlder ? '…' : 'Өмнөх зурвасууд'}
+          </button>
+        )}
         {q && shown.length === 0 && (
           <p className="py-8 text-center text-sm text-muted">"{search}" олдсонгүй</p>
         )}

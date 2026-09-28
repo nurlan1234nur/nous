@@ -3,6 +3,7 @@ import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { WebPushSubscription } from '../models/WebPushSubscription.js';
 import { sendExpoPush } from './expoPush.js';
+import { logger } from './logger.js';
 
 export const pushEnabled = Boolean(env.vapidPublicKey && env.vapidPrivateKey);
 
@@ -28,7 +29,7 @@ export async function sendMessagePush(
   await sendExpoPush(
     recipients.map((recipient) => recipient._id.toString()),
     { title: sender.name, body, data: { url: '/chat', type: 'message' } },
-  ).catch((error) => console.error('[EXPO PUSH]', (error as Error).message));
+  ).catch((err) => logger.error({ err }, 'Expo push failed'));
 
   if (!pushEnabled) return;
 

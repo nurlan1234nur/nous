@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { api, auth, createCouple, createUser } from './helpers.js';
+import { api, auth, createCouple, createUser, type TestUser } from './helpers.js';
 
 const quizInput = {
   title: 'Хэн нь илүү?',
@@ -71,6 +71,61 @@ describe('who-is-more quiz', () => {
 });
 
 describe('battleship', () => {
+  const post = (u: TestUser, path: string, body: object = {}) =>
+    api().post(`/api/battleship${path}`).set(auth(u)).send(body);
+
+  it('full game: place → ready → alternate turns → nose hit wins; opponent planes stay hidden', async () => {
+    const { a, b } = await createCouple();
+    // Онгоц талбайгаас гарвал татгалзана (x=9 → 11-р багана хүртэл).
+    expect((await post(a, '/place', { x: 9, y: 1, rotation: 0 })).status).toBe(400);
+    expect((await post(a, '/ready')).status).toBe(409); // онгоцгүй бол бэлэн болохгүй
+
+    await post(a, '/place', { x: 1, y: 1, rotation: 0 });
+    await post(b, '/place', { x: 5, y: 5, rotation: 0 });
+    await post(a, '/ready');
+    const started = await post(b, '/ready');
+    expect(started.body.game.status).toBe('playing');
+    // Өрсөлдөгчийн онгоцны байрлал payload-д огт байхгүй.
+    expect(JSON.stringify(started.body.game.opponent)).not.toMatch(/"planes"|"cells"/);
+
+    const first = started.body.game.turnUserId === a.id ? a : b;
+    const second = first === a ? b : a;
+    // BASE_PLANE-ийн хамар (x+1, y) — a: (2,1), b: (6,5)
+    const noseOfSecond = second === a ? { x: 2, y: 1 } : { x: 6, y: 5 };
+    const bodyOfSecond = second === a ? { x: 2, y: 2 } : { x: 6, y: 6 };
+
+    expect((await post(second, '/fire', { x: 10, y: 10 })).status).toBe(409); // ээлж биш
+    const hit = await post(first, '/fire', bodyOfSecond);
+    expect(hit.body.game.opponent.shots.at(-1).result).toBe('hit');
+    expect(hit.body.game.status).toBe('playing');
+
+    await post(second, '/fire', { x: 10, y: 10 });
+    expect((await post(first, '/fire', bodyOfSecond)).status).toBe(409); // нэг нүд рүү дахин буудахгүй
+
+    const win = await post(first, '/fire', noseOfSecond);
+    expect(win.body.game).toMatchObject({ status: 'finished', winnerUserId: first.id });
+    expect(win.body.game.opponent.shots.at(-1).result).toBe('head');
+
+    const reset = await post(second, '/reset');
+    expect(reset.body.game).toMatchObject({ status: 'placement', winnerUserId: null });
+    expect(reset.body.game.me.planes).toHaveLength(0);
+  });
+
+  it('plane count change needs both players and rejects overlapping planes', async () => {
+    const { a, b } = await createCouple();
+    const proposed = await post(a, '/plane-count/propose', { count: 2 });
+    expect(proposed.body.game.planeCount).toBe(1);
+    const approved = await post(b, '/plane-count/approve');
+    expect(approved.body.game.planeCount).toBe(2);
+
+    await post(a, '/place', { x: 1, y: 1, rotation: 0 });
+    expect((await post(a, '/place', { x: 1, y: 2, rotation: 0 })).status).toBe(400); // давхцана
+    expect((await post(a, '/ready')).status).toBe(409); // 2 онгоц дутуу
+    expect((await post(a, '/place', { x: 5, y: 5, rotation: 90 })).status).toBe(200);
+    expect((await post(a, '/ready')).status).toBe(200);
+  });
+
+
   it('starts in placement and rejects shots before both players are ready', async () => {
     const { a } = await createCouple();
     const game = await api().get('/api/battleship').set(auth(a));

@@ -20,6 +20,7 @@ import { numberGuessRouter } from './routes/numberGuess.routes.js';
 import { notFound, errorHandler } from './middleware/error.js';
 import { uploadsDir } from './config/uploads.js';
 import { apiLimiter } from './middleware/rateLimit.js';
+import { httpLogger } from './utils/logger.js';
 
 // Express app-ийг үүсгэнэ (HTTP server-ээс салгасан — тестэд supertest-ээр шууд ашиглана).
 export function createApp(): Express {
@@ -29,6 +30,7 @@ export function createApp(): Express {
   app.set('trust proxy', env.trustProxy);
   app.disable('x-powered-by');
   // API нь JSON л буцаадаг; зураг өөр origin (web/mobile)-оос ачаалагдах тул CORP-г cross-origin болгоно.
+  app.use(httpLogger);
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cors({ origin: env.clientOrigin, credentials: true }));
   app.use(express.json({ limit: '1mb' }));

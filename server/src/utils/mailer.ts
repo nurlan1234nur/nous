@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { logger } from './logger.js';
 
 // Gmail SMTP. GMAIL_USER + GMAIL_APP_PASSWORD env байвал жинхэнэ имэйл явна.
 // Байхгүй бол dev горим — код server log дээр хэвлэгдэнэ (жинхэнэ имэйл явахгүй).
@@ -23,8 +24,7 @@ export async function sendOtpEmail(to: string, code: string, purpose: string): P
 
   if (!transporter) {
     if (process.env.NODE_ENV === 'production') {
-      // eslint-disable-next-line no-console
-      console.error('[MAIL] GMAIL_USER/GMAIL_APP_PASSWORD тохируулаагүй — OTP илгээгдсэнгүй');
+      logger.error({ purpose }, 'GMAIL_USER/GMAIL_APP_PASSWORD not configured — OTP email not sent');
       return false;
     }
     // eslint-disable-next-line no-console
@@ -52,11 +52,11 @@ export async function sendOtpEmail(to: string, code: string, purpose: string): P
   } catch (err) {
     // Имэйл илгээж чадсангүй (ж: буруу App Password) — кодыг log-д үлдээж,
     // бүртгэл эвдрэхээс сэргийлж false буцаана (код дэлгэцэнд гарна).
-    // eslint-disable-next-line no-console
-    console.error(
-      `[MAIL ERROR] → ${to}: ${(err as Error).message}` +
-        (process.env.NODE_ENV === 'production' ? '' : `\n[FALLBACK OTP] код: ${code}`),
-    );
+    logger.error({ err, purpose, toDomain: to.split('@')[1] }, 'OTP email failed');
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.log(`[FALLBACK OTP] → ${to} | код: ${code}`);
+    }
     return false;
   }
 }

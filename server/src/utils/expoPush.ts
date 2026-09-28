@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { ExpoPushToken } from '../models/ExpoPushToken.js';
+import { logger } from './logger.js';
 
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
@@ -50,7 +51,7 @@ export async function sendExpoPush(userIds: string[], message: NativePushMessage
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      console.error(`[EXPO PUSH] HTTP ${res.status}`);
+      logger.error({ status: res.status }, 'Expo push request failed');
       continue;
     }
     // eslint-disable-next-line no-await-in-loop
