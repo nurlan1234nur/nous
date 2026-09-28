@@ -7,7 +7,7 @@
 
 ## 🔴 1. Яаралтай — одоо production-д нөлөөлж байгаа
 
-- [ ] **Gmail тохируулах.** VPS дээр `/home/<user>/nous/.env` файлд нэмнэ:
+- [x] **Gmail тохируулах.** VPS дээр `/home/<user>/nous/.env` файлд нэмнэ:
   ```env
   GMAIL_USER=таны-gmail@gmail.com
   GMAIL_APP_PASSWORD=xxxx xxxx xxxx xxxx
@@ -16,7 +16,7 @@
   > ⚠️ Үүнгүйгээр шинэ хувилбар deploy болмогц **бүртгүүлэх, нууц үг сэргээх ажиллахгүй** болно
   > (өмнө нь код дэлгэцэнд гардаг байсан нь аюулгүй байдлын цоорхой байсан тул хаасан).
 
-- [ ] **PR үүсгээд merge хийх.** Бүх өөрчлөлт `claude/gracious-lovelace-t0te25` branch дээр байна.
+- [x] **PR үүсгээд merge хийх.** Бүх өөрчлөлт `claude/gracious-lovelace-t0te25` branch дээр байна.
   GitHub дээр PR нээж, CI (server test + mobile test) ногоон болсны дараа `main` руу merge хийвэл автоматаар deploy болно.
   > Merge хийхээс **өмнө** дээрх Gmail-ийг тохируулсан байх ёстой.
 
@@ -55,7 +55,7 @@
 - [ ] **Privacy Policy.** Хуудас бэлэн: `client/public/privacy.html` → `https://<web-домэйн>/privacy.html`
   (web болон mobile-ийн More цэснээс холбоостой). Танд үлдсэн нь:
   1. Текстийг уншиж баталгаажуулах.
-  2. `privacy@nous.mn` гэсэн холбоо барих имэйлийг өөрийн бодит имэйлээр солих (2 газар).
+  2. ~~Холбоо барих имэйл~~ — `nurlant566@gmail.com` болгосон ✅
   3. Store-д энэ URL-г оруулах.
 
 - [ ] **Store материал:** app icon (1024×1024), screenshot-ууд (iPhone 6.7", Android), тайлбар, ангилал.
