@@ -90,3 +90,13 @@ export function formatDate(value: string | null | undefined): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
   return m ? `${m[1]}.${m[2]}.${m[3]}` : value;
 }
+
+// YouTube линкээс video id (watch?v=, youtu.be/, shorts/, embed/, live/). RN-ийн URL дутуу тул regex.
+export function youtubeVideoId(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m =
+    /^(?:https?:\/\/)?(?:www\.|m\.|music\.)?youtu\.be\/([A-Za-z0-9_-]{6,20})/i.exec(url) ??
+    /^(?:https?:\/\/)?(?:www\.|m\.|music\.)?youtube\.com\/watch\?(?:[^#]*&)?v=([A-Za-z0-9_-]{6,20})/i.exec(url) ??
+    /^(?:https?:\/\/)?(?:www\.|m\.|music\.)?youtube\.com\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{6,20})/i.exec(url);
+  return m ? m[1] : null;
+}

@@ -9,7 +9,7 @@ import { MoreScreen } from '../screens/MoreScreen';
 import { TimelineScreen } from '../screens/TimelineScreen';
 import { themedStyles } from '../theme';
 
-type TabKey = 'home' | 'timeline' | 'memories' | 'chat' | 'more';
+import { getLastTab, setLastTab, type TabKey } from './tabState';
 
 const tabs: Array<{ key: TabKey; label: string; icon: string }> = [
   { key: 'home', label: 'Home', icon: '\u2302' },
@@ -34,13 +34,10 @@ function renderScreen(tab: TabKey) {
   }
 }
 
-// Theme солигдоход MainTabs дахин mount болдог тул идэвхтэй табыг component-оос гадна хадгална.
-let lastTab: TabKey = 'home';
-
 export function MainTabs() {
-  const [activeTab, setActiveTabState] = useState<TabKey>(lastTab);
+  const [activeTab, setActiveTabState] = useState<TabKey>(getLastTab);
   const setActiveTab = (tab: TabKey) => {
-    lastTab = tab;
+    setLastTab(tab);
     setActiveTabState(tab);
   };
   const insets = useSafeAreaInsets();
