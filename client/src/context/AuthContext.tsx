@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { api, setToken, clearToken, getToken } from '../lib/api';
+import { api, setToken, clearToken, getToken, setMediaToken } from '../lib/api';
 import { disconnectSocket } from '../lib/socket';
 import { applyTheme } from '../lib/theme';
 import { disableNotifications } from '../lib/notifications';
@@ -20,18 +20,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Зургийн token-ийг хэрэглэгчтэй зэрэг шинэчилнэ (render-ээс өмнө — assetUrl шууд ашиглана).
+  function applyUser(next: User | null) {
+    setMediaToken(next?.mediaToken);
+    setUser(next);
+  }
+
   async function refresh() {
     if (!getToken()) {
-      setUser(null);
+      applyUser(null);
       setLoading(false);
       return;
     }
     try {
       const { user } = await api<{ user: User }>('/auth/me');
-      setUser(user);
+      applyUser(user);
     } catch {
       clearToken();
-      setUser(null);
+      applyUser(null);
     } finally {
       setLoading(false);
     }
@@ -52,14 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, password }),
     });
     setToken(token);
-    setUser(user);
+    applyUser(user);
   }
 
   async function logout() {
     await disableNotifications().catch(() => {});
     clearToken();
     disconnectSocket();
-    setUser(null);
+    applyUser(null);
   }
 
   async function deleteAccount(password: string) {
@@ -67,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await disableNotifications().catch(() => {});
     clearToken();
     disconnectSocket();
-    setUser(null);
+    applyUser(null);
   }
 
   return (

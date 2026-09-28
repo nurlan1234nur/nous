@@ -31,6 +31,8 @@ userSchema.index(
   { unique: true, partialFilterExpression: { recoveryEmail: { $type: 'string' } } },
 );
 
+userSchema.index({ couple: 1, avatar: 1 }); // /uploads эрхийн шалгалт
+
 export type UserDoc = InferSchemaType<typeof userSchema> & { _id: Types.ObjectId };
 
 export const User = model('User', userSchema);

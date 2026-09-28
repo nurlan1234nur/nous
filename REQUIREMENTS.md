@@ -90,7 +90,7 @@
 | SEC-5 | OTP/урилгын код `crypto.randomInt`-ээр | ✅ |
 | SEC-6 | Буруу ObjectId / JSON → 400 (500 биш) | ✅ |
 | SEC-7 | Mobile token SecureStore-д | ✅ |
-| SEC-8 | `/uploads` нэвтрэлтгүй нээлттэй (UUID нэрээр) — Cloudinary signed URL эсвэл auth-тай proxy руу шилжүүлэх | ⬜ |
+| SEC-8 | `/uploads` зураг зөвхөн эзэн болон хосдоо (тусгай media token `?t=`, API token-оос тусдаа; эрхгүй бол 404; token log-д бичигдэхгүй). Cloudinary ашиглавал URL нийтэд нээлттэй хэвээр | ✅ (disk) |
 | REL-1 | SIGTERM үед graceful shutdown | ✅ |
 | REL-2 | MongoDB + uploads backup (`scripts/backup.sh`, cron-д тохируулах үлдсэн) | 🟡 |
 | REL-3 | Health check (`/api/health`) + docker healthcheck | ✅ |

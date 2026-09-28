@@ -21,6 +21,7 @@ import { notFound, errorHandler } from './middleware/error.js';
 import { uploadsDir } from './config/uploads.js';
 import { apiLimiter } from './middleware/rateLimit.js';
 import { httpLogger } from './utils/logger.js';
+import { requireUploadAccess } from './middleware/uploadsAuth.js';
 
 // Express app-ийг үүсгэнэ (HTTP server-ээс салгасан — тестэд supertest-ээр шууд ашиглана).
 export function createApp(): Express {
@@ -42,7 +43,8 @@ export function createApp(): Express {
   });
 
   // Upload хийсэн зургуудыг статикаар үйлчилнэ (nginx /uploads-ийг энд proxy хийнэ).
-  app.use('/uploads', express.static(uploadsDir));
+  // Зөвхөн эрхтэй хэрэглэгч (өөрийн эсвэл хосын зураг) media token-оор нээнэ.
+  app.use('/uploads', requireUploadAccess, express.static(uploadsDir, { index: false, dotfiles: 'deny' }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ ok: true, service: 'nous-server' });
