@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { getSocket } from '../lib/socket';
+import { useSocketEvents } from '../hooks/useSocketEvents';
 import type { Wish } from '../types';
 
 function sortWishes(wishes: Wish[]): Wish[] {
@@ -41,34 +41,17 @@ export function DreamJarSection() {
     if (open) void loadWishes();
   }, [loadWishes, open]);
 
-  useEffect(() => {
-    let active = true;
-    void getSocket()
-      .then((socket) => {
-        if (!active) return;
-        socket.on('wish:new', (wish: Wish) => {
-          setWishes((current) => sortWishes(current.some((item) => item._id === wish._id) ? current : [...current, wish]));
-        });
-        socket.on('wish:update', (wish: Wish) => {
-          setWishes((current) => sortWishes(current.map((item) => (item._id === wish._id ? wish : item))));
-        });
-        socket.on('wish:deleted', ({ id }: { id: string }) => {
-          setWishes((current) => current.filter((item) => item._id !== id));
-        });
-      })
-      .catch(() => undefined);
-
-    return () => {
-      active = false;
-      void getSocket()
-        .then((socket) => {
-          socket.off('wish:new');
-          socket.off('wish:update');
-          socket.off('wish:deleted');
-        })
-        .catch(() => undefined);
-    };
-  }, []);
+  useSocketEvents({
+    'wish:new': (wish: Wish) => {
+      setWishes((current) => sortWishes(current.some((item) => item._id === wish._id) ? current : [...current, wish]));
+    },
+    'wish:update': (wish: Wish) => {
+      setWishes((current) => sortWishes(current.map((item) => (item._id === wish._id ? wish : item))));
+    },
+    'wish:deleted': ({ id }: { id: string }) => {
+      setWishes((current) => current.filter((item) => item._id !== id));
+    },
+  });
 
   async function addWish() {
     const value = text.trim();

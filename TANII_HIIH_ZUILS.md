@@ -52,9 +52,11 @@
   3. `cd mobile && eas credentials` → Android → Push Notifications → FCM V1 → JSON-оо оруулна.
   4. `google-services.json` татаж `mobile/`-д хийгээд `app.json`-д `"android": { "googleServicesFile": "./google-services.json" }` нэмнэ.
 
-- [ ] **Privacy Policy хуудас.** Store-ууд заавал URL шаардана. Юу цуглуулдаг (username, Gmail, зураг, зурвас),
-  хаана хадгалдаг, бүртгэл устгах боломжтой гэдгийг бичсэн энгийн хуудас (жнь `https://nous.mn/privacy`).
-  Хүсвэл би текстийг нь бэлдэж өгч чадна.
+- [ ] **Privacy Policy.** Хуудас бэлэн: `client/public/privacy.html` → `https://<web-домэйн>/privacy.html`
+  (web болон mobile-ийн More цэснээс холбоостой). Танд үлдсэн нь:
+  1. Текстийг уншиж баталгаажуулах.
+  2. `privacy@nous.mn` гэсэн холбоо барих имэйлийг өөрийн бодит имэйлээр солих (2 газар).
+  3. Store-д энэ URL-г оруулах.
 
 - [ ] **Store материал:** app icon (1024×1024), screenshot-ууд (iPhone 6.7", Android), тайлбар, ангилал.
   App Store-ийн "App Privacy", Play Store-ийн "Data safety" асуулгыг бөглөх.
@@ -73,18 +75,31 @@
 
 ## 🟢 4. Production-ийн найдвартай байдал (эхний хэрэглэгчдээс өмнө)
 
-- [ ] **MongoDB backup.** VPS дээр өдөр бүр:
+- [ ] **MongoDB backup.** Script бэлэн (`scripts/backup.sh`). VPS дээр cron-д нэмэхэд л болно:
   ```bash
-  # crontab -e
-  0 3 * * * docker exec nous-mongo-1 mongodump --archive --gzip > /home/<user>/backups/nous-$(date +\%F).gz
+  crontab -e
+  # доорх мөрийг нэмнэ (<user>-ийг солино):
+  15 3 * * * cd /home/<user>/nous && bash scripts/backup.sh >> backups/backup.log 2>&1
   ```
-  мөн файлыг гадна (Google Drive, S3 г.м.) хуулах. 7 хоногоос хуучныг устгах.
+  Гадна хуулах бол `rclone config` хийгээд cron мөрөнд `RCLONE_REMOTE=gdrive:nous-backups` нэмнэ.
+  Нэг удаа гараар ажиллуулж, сэргээж үзэх (script-ийн төгсгөлд заавар бий).
 - [ ] **Cloudinary** (заавал биш, санал болгож байна): зургууд одоо VPS disk дээр. Cloudinary үнэгүй
   account нээж `CLOUDINARY_*` 3 утгыг `.env`-д нэмбэл зураг найдвартай хадгалагдана.
 - [ ] **Sentry** (алдааны мониторинг) — үнэгүй account нээгээд DSN-ээ надад өгвөл холбож өгнө.
 - [ ] **Web Push** (PWA-д): `cd server && npm run generate:vapid` → гарсан 2 key-г `.env`-д `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`.
 
-## 5. Мэдээлэл — шийдвэр хэрэгтэй
+## 🔵 5. Cloudflare (web client)
+
+`main` дээр Cloudflare Workers-ийн автомат тохиргоо (`wrangler.jsonc`) merge хийгдсэн байна. Анхаарах:
+- [ ] Root дээрх `wrangler.jsonc` нь `"assets": { "directory": "client" }` — build хийгдээгүй **эх код**-ыг serve хийнэ.
+  `client/wrangler.jsonc` (build-ийн `dist`-ийг ашигладаг) нь зөв хувилбар. Cloudflare dashboard дээр
+  root directory-г `client` болгох эсвэл root `wrangler.jsonc`-г устгахыг зөвлөж байна.
+- [ ] Cloudflare дээрх web нь өөр домэйн тул build env-д `VITE_API_ORIGIN=https://api.<домэйн>` тохируулах,
+  server `.env`-ийн `CLIENT_ORIGIN`-д Cloudflare-ийн домэйныг таслалаар нэмэх
+  (жнь `CLIENT_ORIGIN=https://nous.mn,https://nous.<user>.workers.dev`).
+- [ ] Cloudflare нь HTTPS тул API мөн **HTTPS** байх ёстой (эс бөгөөс браузер "mixed content" гэж хаана).
+
+## 6. Мэдээлэл — шийдвэр хэрэгтэй
 
 - **Бүртгэл устгахад** хос дотор хамтрагч үлдвэл дурсамж, зурвас хамтрагчид үлддэг, хоёулаа устгавал бүгд устдаг
   гэж хийсэн. Өөр бодлого хүсвэл (жнь устгасан хүний зурвасыг бас устгах) хэлээрэй.

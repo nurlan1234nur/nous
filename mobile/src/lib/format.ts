@@ -75,3 +75,18 @@ export function groupByMonth<T extends { date: string }>(items: T[]): Array<{ ke
 export function isImageAvatar(avatar: string | null | undefined): boolean {
   return Boolean(avatar && (avatar.startsWith('/uploads/') || /^https?:\/\//.test(avatar)));
 }
+
+// Огнооноос хойш өнгөрсөн бүтэн хоног (хамтдаа хэдэн хоног). Огноогүй бол 0.
+export function daysSince(iso: string | null | undefined, now: number = Date.now()): number {
+  if (!iso) return 0;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return 0;
+  return Math.max(0, Math.floor((now - t) / 86_400_000));
+}
+
+// "2000-05-12" эсвэл ISO → "2000.05.12"
+export function formatDate(value: string | null | undefined): string {
+  if (!value) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  return m ? `${m[1]}.${m[2]}.${m[3]}` : value;
+}

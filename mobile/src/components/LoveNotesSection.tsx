@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
-import { getSocket } from '../lib/socket';
+import { useSocketEvents } from '../hooks/useSocketEvents';
 import type { LoveNote } from '../types';
 
 type NoteView = 'received' | 'sent';
@@ -48,35 +48,18 @@ export function LoveNotesSection() {
     if (open) void loadNotes();
   }, [loadNotes, open]);
 
-  useEffect(() => {
-    let active = true;
-    void getSocket()
-      .then((socket) => {
-        if (!active) return;
-        socket.on('love-note:new', (note: LoveNote) => {
-          if (note.author._id === user?.id) return;
-          setNotes((current) => (current.some((item) => item._id === note._id) ? current : [note, ...current]));
-        });
-        socket.on('love-note:opened', (note: LoveNote) => {
-          setNotes((current) => current.map((item) => (item._id === note._id ? note : item)));
-        });
-        socket.on('love-note:deleted', ({ id }: { id: string }) => {
-          setNotes((current) => current.filter((item) => item._id !== id));
-        });
-      })
-      .catch(() => undefined);
-
-    return () => {
-      active = false;
-      void getSocket()
-        .then((socket) => {
-          socket.off('love-note:new');
-          socket.off('love-note:opened');
-          socket.off('love-note:deleted');
-        })
-        .catch(() => undefined);
-    };
-  }, [user?.id]);
+  useSocketEvents({
+    'love-note:new': (note: LoveNote) => {
+      if (note.author._id === user?.id) return;
+      setNotes((current) => (current.some((item) => item._id === note._id) ? current : [note, ...current]));
+    },
+    'love-note:opened': (note: LoveNote) => {
+      setNotes((current) => current.map((item) => (item._id === note._id ? note : item)));
+    },
+    'love-note:deleted': ({ id }: { id: string }) => {
+      setNotes((current) => current.filter((item) => item._id !== id));
+    },
+  });
 
   const unreadCount = useMemo(
     () => notes.filter((note) => note.recipient._id === user?.id && !note.openedAt).length,

@@ -419,9 +419,14 @@ export default function More() {
         <button onClick={logout} className="mt-3 w-full rounded-2xl border border-rose/40 py-3 text-sm font-medium text-rose">
           Гарах
         </button>
-        <button onClick={() => setDeleteOpen(true)} className="mt-2 w-full py-2 text-xs text-muted underline">
-          Бүртгэл устгах
-        </button>
+        <div className="mt-2 flex justify-center gap-5 py-2 text-xs text-muted">
+          <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline">
+            Нууцлалын бодлого
+          </a>
+          <button onClick={() => setDeleteOpen(true)} className="underline">
+            Бүртгэл устгах
+          </button>
+        </div>
         <DeleteAccountSheet open={deleteOpen} onClose={() => setDeleteOpen(false)} />
       </div>
 

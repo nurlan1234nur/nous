@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, Text
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api, assetUrl } from '../lib/api';
-import { getSocket } from '../lib/socket';
+import { useSocketEvents } from '../hooks/useSocketEvents';
 import { useResync } from '../hooks/useResync';
 import { DailyArchiveModal } from '../components/DailyArchiveModal';
 import type { DailyQuestion, Moment, Mood } from '../types';
@@ -62,32 +62,15 @@ export function HomeScreen() {
 
   useResync(() => void loadHome());
 
-  useEffect(() => {
-    let active = true;
-    void getSocket()
-      .then((socket) => {
-        if (!active) return;
-        socket.on('moment:new', (moment: Moment) => setMoments((current) => (current.some((item) => item._id === moment._id) ? current : [moment, ...current])));
-        socket.on('moment:react', (moment: Moment) => setMoments((current) => current.map((item) => (item._id === moment._id ? moment : item))));
-        socket.on('moment:deleted', ({ id }: { id: string }) => setMoments((current) => current.filter((item) => item._id !== id)));
-        socket.on('mood:new', (mood: Mood) => setMoods((current) => [mood, ...current]));
-        socket.on('daily:answer', () => void api<DailyQuestion>('/daily').then(setDaily));
-      })
-      .catch(() => undefined);
-
-    return () => {
-      active = false;
-      void getSocket()
-        .then((socket) => {
-          socket.off('moment:new');
-          socket.off('moment:react');
-          socket.off('moment:deleted');
-          socket.off('mood:new');
-          socket.off('daily:answer');
-        })
-        .catch(() => undefined);
-    };
-  }, []);
+  useSocketEvents({
+    'moment:new': (moment: Moment) =>
+      setMoments((current) => (current.some((item) => item._id === moment._id) ? current : [moment, ...current])),
+    'moment:react': (moment: Moment) =>
+      setMoments((current) => current.map((item) => (item._id === moment._id ? moment : item))),
+    'moment:deleted': ({ id }: { id: string }) => setMoments((current) => current.filter((item) => item._id !== id)),
+    'mood:new': (mood: Mood) => setMoods((current) => [mood, ...current]),
+    'daily:answer': () => void api<DailyQuestion>('/daily').then(setDaily).catch(() => {}),
+  });
 
   const myMood = useMemo(() => moods.find((mood) => mood.user._id === me?._id), [me?._id, moods]);
   const partnerMood = useMemo(() => moods.find((mood) => mood.user._id === partner?._id), [partner?._id, moods]);

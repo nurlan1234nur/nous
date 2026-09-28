@@ -39,9 +39,10 @@
 
 | ID | Шаардлага | Server | Web | Mobile | Тест |
 |----|-----------|:-:|:-:|:-:|:-:|
-| CHAT-1 | Текст зурвас илгээх / хүлээн авах (Socket.IO) | ✅ | ✅ | ✅ | ✅ server |
-| CHAT-2 | Зураг илгээх | ✅ | ✅ | ✅ | ⬜ |
-| CHAT-8 | Чатын цэс: хуваалцсан зургууд, чат цэвэрлэх | ✅ | ✅ | ✅ | ⬜ |
+| CHAT-1 | Текст зурвас илгээх / хүлээн авах (Socket.IO) | ✅ | ✅ | ✅ | ✅ server + socket |
+| CHAT-2 | Зураг илгээх | ✅ | ✅ | ✅ | ✅ server |
+| CHAT-8 | Чатын цэс: хуваалцсан зургууд (`/messages/media`, pagination), чат цэвэрлэх | ✅ | ✅ | ✅ | ✅ server |
+| CHAT-9 | Хамтрагчийн профайл (онлайн төлөв, хамтдаа хэдэн хоног, төрсөн өдөр) | ✅ | ✅ | ✅ | ✅ mobile (helper) |
 | CHAT-3 | Зурвас татах (unsend) — зөвхөн өөрийнхөө | ✅ | ✅ | ✅ | ✅ server |
 | CHAT-4 | Бичиж байна…, Үзсэн, Онлайн / сүүлд онлайн | ✅ | ✅ | ✅ | ✅ mobile (format) |
 | CHAT-5 | Хамгийн сүүлийн зурвасууд харагдана, хуучныг дээш ачаална (`?before=`) | ✅ | 🟡 | ✅ | ✅ server |
@@ -67,16 +68,14 @@
 | FUN-2 | Time Capsule | ✅ | ✅ | ✅ | ✅ server |
 | FUN-3 | Song of Us (YouTube) | ✅ | ✅ | 🟡 (гадна нээнэ, mini player-гүй) | ⬜ |
 | FUN-4 | Dream Jar (2/2 зөвшөөрөл) | ✅ | ✅ | ✅ | ✅ server |
-| GAME-1 | Хэн нь илүү | ✅ | ✅ | ✅ | ⬜ |
-| GAME-2 | Онгоц буудах | ✅ | ✅ | ✅ | ⬜ |
+| GAME-1 | Хэн нь илүү | ✅ | ✅ | ✅ | ✅ server |
+| GAME-2 | Онгоц буудах | ✅ | ✅ | ✅ | 🟡 server (эхлэл) |
 | GAME-3 | Тоо олох | ✅ | ✅ | ✅ | ✅ server |
 
 ### 1.6 Web-д байгаа, mobile-д дутуу
 
-- Хамтрагчийн профайл sheet
 - Чатын wallpaper, theme-ийн өнгийг UI-д хэрэглэх (одоо зөвхөн rose)
 - Song mini player (app дотор тоглуулах; одоо YouTube-ийг гадна нээнэ)
-- Хуваалцсан зургууд зөвхөн ачаалагдсан зурвасуудаас харагдана (серверийн тусдаа endpoint хэрэгтэй)
 
 ---
 
@@ -93,15 +92,16 @@
 | SEC-7 | Mobile token SecureStore-д | ✅ |
 | SEC-8 | `/uploads` нэвтрэлтгүй нээлттэй (UUID нэрээр) — Cloudinary signed URL эсвэл auth-тай proxy руу шилжүүлэх | ⬜ |
 | REL-1 | SIGTERM үед graceful shutdown | ✅ |
-| REL-2 | MongoDB backup (өдөр бүр `mongodump` + гадна хадгалах) | ⬜ |
+| REL-2 | MongoDB + uploads backup (`scripts/backup.sh`, cron-д тохируулах үлдсэн) | 🟡 |
 | REL-3 | Health check (`/api/health`) + docker healthcheck | ✅ |
 | REL-4 | Socket дахин холбогдоход token шинээр уншина, foreground болоход сэргээнэ | ✅ mobile |
+| REL-5 | Дэлгэц бүр socket listener-ээ нэрээр нь салгана (таб солиход бусад дэлгэцийн real-time эвдрэхгүй) | ✅ mobile |
 | OBS-1 | Алдааны мониторинг (Sentry: server + mobile) | ⬜ |
 | OBS-2 | Бүтэцтэй log (pino) | ⬜ |
 | SCALE-1 | Presence санах ойд — 1-ээс олон server instance бол Redis adapter хэрэгтэй | ⬜ |
 | UX-1 | Safe area (notch, Dynamic Island, home indicator) | ✅ mobile |
 | UX-2 | Сүлжээгүй / timeout үед ойлгомжтой алдаа | ✅ mobile |
-| LEGAL-1 | Privacy Policy URL (App Store, Play Store-д заавал) | ⬜ |
+| LEGAL-1 | Privacy Policy URL (`client/public/privacy.html` → `/privacy.html`; web/mobile-д холбоостой; холбоо барих имэйлийг солих үлдсэн) | 🟡 |
 | LEGAL-2 | Play Store Data safety, App Store Privacy nutrition label | ⬜ |
 
 ---
@@ -132,17 +132,18 @@ Deploy зөвхөн `main`/`master` дээр, бүх шалгалт давсны
 | Server | `server/test/couple.test.ts` | Хос үүсгэх/нэгдэх, зэрэг нэгдэлт, хос хоорондын тусгаарлалт, чат (жагсаалт, pagination, unsend) |
 | Server | `server/test/moments.test.ts` | Зураг upload, reaction, эрх, файл устгах, зураг биш файл татгалзах |
 | Server | `server/test/features.test.ts` | Dream Jar 2/2, Love Note нуугдах/нээх эрх, Time Capsule түгжээ, өдрийн асуулт + түүх, Тоо олох (ээлж, alpha/betta, ялагч, reset) |
+| Server | `server/test/games.test.ts` | Хэн нь илүү (нуугдах хариулт, эрх, дахин хариулах, оноо), Battleship эхлэл |
+| Server | `server/test/socket.test.ts` | Socket.IO: token/хосгүй холболт татгалзах, хос хоорондын тусгаарлалт, presence, typing |
 | Server | `server/test/account.test.ts` | Expo push token бүртгэх/шилжүүлэх, бүртгэл устгах (хамтрагчид өгөгдөл үлдэх, сүүлийнх устгавал бүгд устах) |
 | Mobile | `mobile/src/lib/__tests__/api.test.ts` | Token header, алдааны мессеж, 401 → logout, сүлжээний алдаа, asset URL |
 | Mobile | `mobile/src/lib/__tests__/format.test.ts` | Хугацаа, онлайн төлөв, "Үзсэн", жагсаалтын туслахууд |
+| Mobile | `mobile/src/hooks/__tests__/useSocketEvents.test.ts` | Нэг дэлгэц unmount болоход нөгөөгийн listener үлдэх, хамгийн сүүлийн handler дуудагдах |
 | Mobile | `mobile/src/components/__tests__/DeleteAccountSection.test.tsx` | Бүртгэл устгах UI flow |
 
 ### 3.3 Дараагийн тестүүд
 
-1. Battleship, Хэн нь илүү тоглоомын route-ууд.
-2. Чатын зураг upload, чат цэвэрлэх.
-3. Socket.IO integration test (`socket.io-client`-ээр): auth, room тусгаарлалт, presence.
-4. Mobile E2E (Maestro): login → хос → чат → зураг → logout. Бодит төхөөрөмж дээрх QA доорх checklist-ээр.
+1. Battleship-ийн бүтэн тоглолт (онгоц байрлуулах → буудах → ялагч).
+2. Mobile E2E (Maestro): login → хос → чат → зураг → logout. Бодит төхөөрөмж дээрх QA доорх checklist-ээр.
 
 ### 3.4 Гар аргаар QA checklist (build бүрд)
 

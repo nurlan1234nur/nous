@@ -21,6 +21,7 @@ import { imageFormData, pickImage } from '../lib/image';
 import { useResync } from '../hooks/useResync';
 import { AvatarView } from '../components/AvatarView';
 import { SharedMediaModal } from '../components/SharedMediaModal';
+import { PartnerProfileModal } from '../components/PartnerProfileModal';
 import type { Message } from '../types';
 
 export function ChatScreen() {
@@ -35,6 +36,7 @@ export function ChatScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const listRef = useRef<FlatList<Message>>(null);
@@ -214,18 +216,26 @@ export function ChatScreen() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.screen}>
       <View style={styles.header}>
-        <View style={styles.avatar}>
-          <AvatarView avatar={partner?.avatar} name={partner?.name} size={44} textStyle={styles.avatarText} />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={styles.title}>{partner?.name ?? 'Chat'}</Text>
-          <Text style={[styles.subtitle, partnerOnline && styles.onlineText]}>{partnerStatus}</Text>
-        </View>
+        <Pressable
+          accessibilityLabel="Хамтрагчийн профайл"
+          disabled={!partner}
+          onPress={() => setProfileOpen(true)}
+          style={styles.headerProfile}
+        >
+          <View style={styles.avatar}>
+            <AvatarView avatar={partner?.avatar} name={partner?.name} size={44} textStyle={styles.avatarText} />
+          </View>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>{partner?.name ?? 'Chat'}</Text>
+            <Text style={[styles.subtitle, partnerOnline && styles.onlineText]}>{partnerStatus}</Text>
+          </View>
+        </Pressable>
         <Pressable accessibilityLabel="Чатын цэс" hitSlop={8} onPress={openMenu} style={styles.menuButton}>
           <Text style={styles.menuText}>⋯</Text>
         </Pressable>
       </View>
-      <SharedMediaModal messages={messages} onClose={() => setMediaOpen(false)} open={mediaOpen} />
+      <PartnerProfileModal onClose={() => setProfileOpen(false)} open={profileOpen} />
+      <SharedMediaModal onClose={() => setMediaOpen(false)} open={mediaOpen} />
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -340,6 +350,12 @@ export function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
+  headerProfile: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    gap: 12,
+  },
   menuButton: {
     alignItems: 'center',
     borderRadius: 18,

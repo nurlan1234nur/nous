@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { PRIVACY_URL } from '../config/env';
 import { useAuth } from '../context/AuthContext';
 
 // Бүртгэл бүрмөсөн устгах — App Store (5.1.1(v)) болон Google Play-ийн шаардлага.
@@ -34,9 +35,16 @@ export function DeleteAccountSection() {
 
   if (!open) {
     return (
-      <Pressable accessibilityRole="button" onPress={() => setOpen(true)} style={styles.link}>
-        <Text style={styles.linkText}>Бүртгэл устгах</Text>
-      </Pressable>
+      <View style={styles.links}>
+        {PRIVACY_URL ? (
+          <Pressable accessibilityRole="link" onPress={() => void Linking.openURL(PRIVACY_URL)} style={styles.link}>
+            <Text style={styles.linkText}>Нууцлалын бодлого</Text>
+          </Pressable>
+        ) : null}
+        <Pressable accessibilityRole="button" onPress={() => setOpen(true)} style={styles.link}>
+          <Text style={styles.linkText}>Бүртгэл устгах</Text>
+        </Pressable>
+      </View>
     );
   }
 
@@ -79,7 +87,8 @@ export function DeleteAccountSection() {
 }
 
 const styles = StyleSheet.create({
-  link: { alignItems: 'center', marginTop: 14, paddingVertical: 10 },
+  links: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 14 },
+  link: { alignItems: 'center', paddingVertical: 10 },
   linkText: { color: '#9b8a93', fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },
   card: {
     backgroundColor: '#fff8f5',

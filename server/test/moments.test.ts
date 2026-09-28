@@ -44,3 +44,32 @@ describe('moments', () => {
     expect((await api().post('/api/moments').set(auth(a)).field('caption', 'x')).status).toBe(400);
   });
 });
+
+describe('chat images', () => {
+  it('image message → listed in /messages/media → unsend removes it', async () => {
+    const { a, b } = await createCouple();
+    await api().post('/api/messages').set(auth(a)).send({ text: 'text only' });
+    const img = await api()
+      .post('/api/messages/image')
+      .set(auth(a))
+      .field('caption', 'look')
+      .attach('image', PNG, { filename: 'c.png', contentType: 'image/png' });
+    expect(img.status).toBe(201);
+    expect(img.body.message).toMatchObject({ text: 'look' });
+
+    const media = await api().get('/api/messages/media').set(auth(b));
+    expect(media.body.media).toHaveLength(1);
+    expect(media.body.media[0].imageUrl).toBe(img.body.message.imageUrl);
+
+    await api().delete(`/api/messages/${img.body.message._id}`).set(auth(a));
+    expect((await api().get('/api/messages/media').set(auth(b))).body.media).toHaveLength(0);
+  });
+
+  it('clearing the chat removes every message for both partners', async () => {
+    const { a, b } = await createCouple();
+    await api().post('/api/messages').set(auth(a)).send({ text: 'x' });
+    await api().post('/api/messages').set(auth(b)).send({ text: 'y' });
+    expect((await api().delete('/api/messages').set(auth(b))).status).toBe(200);
+    expect((await api().get('/api/messages').set(auth(a))).body.messages).toHaveLength(0);
+  });
+});

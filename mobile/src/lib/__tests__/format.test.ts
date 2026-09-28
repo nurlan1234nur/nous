@@ -1,4 +1,4 @@
-import { dayLabel, groupByMonth, isImageAvatar, partnerSawMessage, prependUnique, presenceLabel, timeAgo, upsertById } from '../format';
+import { dayLabel, daysSince, formatDate, groupByMonth, isImageAvatar, partnerSawMessage, prependUnique, presenceLabel, timeAgo, upsertById } from '../format';
 
 const NOW = new Date('2026-09-28T12:00:00Z').getTime();
 const ago = (ms: number) => new Date(NOW - ms).toISOString();
@@ -72,5 +72,16 @@ describe('isImageAvatar', () => {
     expect(isImageAvatar('💛')).toBe(false);
     expect(isImageAvatar('')).toBe(false);
     expect(isImageAvatar(null)).toBe(false);
+  });
+});
+
+describe('daysSince / formatDate', () => {
+  it('counts whole days and formats dates', () => {
+    expect(daysSince(null, NOW)).toBe(0);
+    expect(daysSince(ago(3 * 86_400_000 + 1000), NOW)).toBe(3);
+    expect(daysSince(new Date(NOW + 86_400_000).toISOString(), NOW)).toBe(0);
+    expect(formatDate('2000-05-12')).toBe('2000.05.12');
+    expect(formatDate('2024-02-14T00:00:00.000Z')).toBe('2024.02.14');
+    expect(formatDate('')).toBe('');
   });
 });

@@ -36,6 +36,22 @@ messageRouter.get(
   }),
 );
 
+// Чатад хуваалцсан зургууд (шинэ → хуучин), "Хуваалцсан зургууд" дэлгэцэд.
+messageRouter.get(
+  '/media',
+  asyncHandler(async (req, res) => {
+    const { limit, before } = listSchema.parse(req.query);
+    const filter: Record<string, unknown> = { couple: req.coupleId, deleted: { $ne: true }, imageUrl: { $nin: ['', null] } };
+    if (before) filter.createdAt = { $lt: before };
+    const rows = await Message.find(filter)
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(limit + 1)
+      .select('imageUrl text sender createdAt')
+      .populate('sender', 'name avatar');
+    res.json({ media: rows.slice(0, limit), hasMore: rows.length > limit });
+  }),
+);
+
 const sendSchema = z.object({
   text: z.string().min(1).max(4000),
   special: z.boolean().optional(),

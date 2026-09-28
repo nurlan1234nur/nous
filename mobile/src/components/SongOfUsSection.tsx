@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { api } from '../lib/api';
-import { getSocket } from '../lib/socket';
+import { useSocketEvents } from '../hooks/useSocketEvents';
 import type { WeeklySong } from '../types';
 
 function weekLabel(value: string): string {
@@ -44,35 +44,19 @@ export function SongOfUsSection() {
     if (open) void loadSongs();
   }, [loadSongs, open]);
 
-  useEffect(() => {
-    let active = true;
-    void getSocket()
-      .then((socket) => {
-        if (!active) return;
-        socket.on('song:update', (song: WeeklySong) => {
-          setCurrent(song);
-          setSongs((existing) => [song, ...existing.filter((item) => item._id !== song._id)]);
-        });
-        socket.on('song:delete', ({ id }: { id: string }) => {
-          setSongs((existing) => {
-            const next = existing.filter((song) => song._id !== id);
-            setCurrent((value) => (value?._id === id ? next[0] ?? null : value));
-            return next;
-          });
-        });
-      })
-      .catch(() => undefined);
-
-    return () => {
-      active = false;
-      void getSocket()
-        .then((socket) => {
-          socket.off('song:update');
-          socket.off('song:delete');
-        })
-        .catch(() => undefined);
-    };
-  }, []);
+  useSocketEvents({
+    'song:update': (song: WeeklySong) => {
+      setCurrent(song);
+      setSongs((existing) => [song, ...existing.filter((item) => item._id !== song._id)]);
+    },
+    'song:delete': ({ id }: { id: string }) => {
+      setSongs((existing) => {
+        const next = existing.filter((song) => song._id !== id);
+        setCurrent((value) => (value?._id === id ? next[0] ?? null : value));
+        return next;
+      });
+    },
+  });
 
   const headline = useMemo(() => current ? `${current.title} - ${current.artist}` : 'Pick your weekly song.', [current]);
 

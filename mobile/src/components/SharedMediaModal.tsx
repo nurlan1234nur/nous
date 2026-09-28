@@ -1,22 +1,48 @@
-import { useState } from 'react';
-import { FlatList, Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { assetUrl } from '../lib/api';
-import type { Message } from '../types';
+import { api, assetUrl } from '../lib/api';
+
+interface MediaItem {
+  _id: string;
+  imageUrl: string;
+  createdAt: string;
+}
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  messages: Message[];
 }
 
-// Чатад хуваалцсан зургууд (шинэ нь эхэнд), дарвал томоор харна.
-export function SharedMediaModal({ open, onClose, messages }: Props) {
+const PAGE = 60;
+
+// Чатад хуваалцсан бүх зураг (шинэ нь эхэнд, доош гүйлгэхэд цааш ачаална), дарвал томоор харна.
+export function SharedMediaModal({ open, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [preview, setPreview] = useState<string | null>(null);
-  const images = messages.filter((m) => !m.deleted && m.imageUrl).reverse();
+  const [images, setImages] = useState<MediaItem[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(false);
   const size = (width - 4 * 4) / 3;
+
+  const load = useCallback(async (before?: string) => {
+    setLoading(true);
+    try {
+      const query = `?limit=${PAGE}${before ? `&before=${encodeURIComponent(before)}` : ''}`;
+      const r = await api<{ media: MediaItem[]; hasMore: boolean }>(`/messages/media${query}`);
+      setImages((current) => (before ? [...current, ...r.media] : r.media));
+      setHasMore(r.hasMore);
+    } catch {
+      // Дэлгэц хоосон харагдана — чат өөрөө алдааг харуулна.
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (open) void load();
+  }, [open, load]);
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen" visible={open}>
@@ -32,11 +58,18 @@ export function SharedMediaModal({ open, onClose, messages }: Props) {
           contentContainerStyle={[styles.grid, { paddingBottom: insets.bottom + 16 }]}
           data={images}
           keyExtractor={(m) => m._id}
-          ListEmptyComponent={<Text style={styles.empty}>Одоохондоо зураг алга.</Text>}
+          ListEmptyComponent={
+            loading ? <ActivityIndicator color="#e8607a" style={styles.loader} /> : <Text style={styles.empty}>Одоохондоо зураг алга.</Text>
+          }
+          ListFooterComponent={loading && images.length ? <ActivityIndicator color="#e8607a" style={styles.loader} /> : null}
+          onEndReached={() => {
+            if (hasMore && !loading) void load(images[images.length - 1]?.createdAt);
+          }}
+          onEndReachedThreshold={0.5}
           numColumns={3}
           renderItem={({ item }) => (
-            <Pressable onPress={() => setPreview(assetUrl(item.imageUrl as string))}>
-              <Image source={{ uri: assetUrl(item.imageUrl as string) }} style={{ height: size, width: size }} />
+            <Pressable onPress={() => setPreview(assetUrl(item.imageUrl))}>
+              <Image source={{ uri: assetUrl(item.imageUrl) }} style={{ height: size, width: size }} />
             </Pressable>
           )}
         />
@@ -67,6 +100,7 @@ const styles = StyleSheet.create({
   closeText: { color: '#e8607a', fontSize: 24, fontWeight: '700', lineHeight: 26 },
   grid: { gap: 4, padding: 4 },
   row: { gap: 4 },
+  loader: { marginVertical: 24 },
   empty: { color: '#9b8a93', marginTop: 40, textAlign: 'center' },
   previewBackdrop: { alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.92)', flex: 1, justifyContent: 'center' },
   previewImage: { height: '80%', width: '100%' },
