@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Image, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Pressable, Text, TextInput, View } from 'react-native';
 import { api } from '../lib/api';
 import { useSocketEvents } from '../hooks/useSocketEvents';
 import type { WeeklySong } from '../types';
+import { themedStyles, colors } from '../theme';
 
 function weekLabel(value: string): string {
   return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -165,7 +166,7 @@ export function SongOfUsSection() {
             <View style={styles.form}>
               <TextInput autoCapitalize="none" editable={!busy} onChangeText={setUrl} placeholder="YouTube or song URL" placeholderTextColor="#9b8a93" style={styles.input} value={url} />
               <Pressable disabled={busy || !url.trim()} onPress={previewYoutube} style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed, (busy || !url.trim()) && styles.disabled]}>
-                {busy ? <ActivityIndicator color="#e8607a" /> : <Text style={styles.secondaryText}>Preview YouTube</Text>}
+                {busy ? <ActivityIndicator color={colors.rose} /> : <Text style={styles.secondaryText}>Preview YouTube</Text>}
               </Pressable>
               <TextInput editable={!busy} onChangeText={setTitle} placeholder="Song title" placeholderTextColor="#9b8a93" style={styles.input} value={title} />
               <TextInput editable={!busy} onChangeText={setArtist} placeholder="Artist" placeholderTextColor="#9b8a93" style={styles.input} value={artist} />
@@ -185,7 +186,7 @@ export function SongOfUsSection() {
                 <Text style={styles.primaryText}>{current ? 'Edit current song' : 'Add song'}</Text>
               </Pressable>
               {loading ? (
-                <ActivityIndicator color="#e8607a" style={styles.loader} />
+                <ActivityIndicator color={colors.rose} style={styles.loader} />
               ) : songs.length === 0 ? (
                 <Text style={styles.empty}>No songs yet.</Text>
               ) : (
@@ -221,7 +222,7 @@ export function SongOfUsSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   wrap: {
     marginBottom: 10,
   },

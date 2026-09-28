@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api, assetUrl } from '../lib/api';
@@ -7,6 +7,7 @@ import { useSocketEvents } from '../hooks/useSocketEvents';
 import { useResync } from '../hooks/useResync';
 import { DailyArchiveModal } from '../components/DailyArchiveModal';
 import type { DailyQuestion, Moment, Mood } from '../types';
+import { themedStyles, colors } from '../theme';
 
 const moodOptions = [
   { emoji: '\u263a', text: 'Happy' },
@@ -121,7 +122,7 @@ export function HomeScreen() {
             <Text style={styles.daysPillText}>{daysSince(couple?.anniversary)} days together</Text>
           </View>
         </View>
-        {coupleLoading ? <ActivityIndicator color="#e8607a" /> : null}
+        {coupleLoading ? <ActivityIndicator color={colors.rose} /> : null}
       </View>
 
       <View style={styles.statsRow}>
@@ -131,7 +132,7 @@ export function HomeScreen() {
       </View>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      {loading ? <ActivityIndicator color="#e8607a" style={styles.sectionLoader} /> : null}
+      {loading ? <ActivityIndicator color={colors.rose} style={styles.sectionLoader} /> : null}
 
       <View style={styles.dailyCard}>
         <View style={styles.dailyTop}>
@@ -222,7 +223,7 @@ function MoodBox({ name, mood }: { name: string; mood?: Mood }) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     backgroundColor: '#fdf6f0',
     flex: 1,

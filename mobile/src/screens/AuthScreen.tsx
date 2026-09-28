@@ -5,13 +5,13 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
+import { themedStyles } from '../theme';
 
 type AuthMode = 'login' | 'forgot-request' | 'forgot-reset' | 'register-email' | 'register-verify';
 
@@ -372,7 +372,7 @@ export function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     flex: 1,
     backgroundColor: '#fdf6f0',

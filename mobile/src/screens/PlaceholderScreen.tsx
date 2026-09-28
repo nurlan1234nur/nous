@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { themedStyles } from '../theme';
 
 interface PlaceholderScreenProps {
   title: string;
@@ -14,7 +15,7 @@ export function PlaceholderScreen({ title, description }: PlaceholderScreenProps
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     backgroundColor: '#fdf6f0',
     flex: 1,

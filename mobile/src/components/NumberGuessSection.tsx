@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, Pressable, Text, TextInput, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import type { NumberGuessAttempt, NumberGuessGame } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { themedStyles, colors } from '../theme';
 
 function cleanCode(value: string): string {
   return value.replace(/\D/g, '').slice(0, 4);
@@ -210,7 +211,7 @@ export function NumberGuessSection() {
 
                 {loading || !game ? (
                   <View style={styles.loading}>
-                    <ActivityIndicator color="#e8607a" />
+                    <ActivityIndicator color={colors.rose} />
                   </View>
                 ) : game.status === 'setup' ? (
                   <View style={styles.card}>
@@ -318,7 +319,7 @@ function AttemptList({ attempts, empty, title }: { attempts: NumberGuessAttempt[
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   entryRow: {
     alignItems: 'center',
     backgroundColor: '#fff8f5',

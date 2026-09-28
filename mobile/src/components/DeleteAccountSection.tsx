@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, Text, TextInput, View } from 'react-native';
 import { PRIVACY_URL } from '../config/env';
 import { useAuth } from '../context/AuthContext';
+import { themedStyles } from '../theme';
 
 // Бүртгэл бүрмөсөн устгах — App Store (5.1.1(v)) болон Google Play-ийн шаардлага.
 export function DeleteAccountSection() {
@@ -86,7 +87,7 @@ export function DeleteAccountSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   links: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginTop: 14 },
   link: { alignItems: 'center', paddingVertical: 10 },
   linkText: { color: '#9b8a93', fontSize: 14, fontWeight: '700', textDecorationLine: 'underline' },

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCouple } from '../context/CoupleContext';
 import { assetUrl } from '../lib/api';
 import { daysSince, formatDate, isImageAvatar, presenceLabel } from '../lib/format';
 import { AvatarView } from './AvatarView';
+import { themedStyles } from '../theme';
 
 interface Props {
   open: boolean;
@@ -63,7 +64,7 @@ function Row({ icon, label, value }: { icon: string; label: string; value: strin
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   backdrop: { backgroundColor: 'rgba(45,31,46,0.35)', flex: 1 },
   sheet: {
     alignItems: 'center',

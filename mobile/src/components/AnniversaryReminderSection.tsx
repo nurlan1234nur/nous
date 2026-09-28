@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import type { Member, Milestone } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { themedStyles, colors } from '../theme';
 
 type ReminderItem = {
   id: string;
@@ -275,7 +276,7 @@ export function AnniversaryReminderSection() {
             ) : null}
 
             {loading ? (
-              <ActivityIndicator color="#e8607a" style={styles.loading} />
+              <ActivityIndicator color={colors.rose} style={styles.loading} />
             ) : reminders.length === 0 ? (
               <Text style={styles.empty}>Ойн өдрөө тохируулаад сануулгууд автоматаар гарна.</Text>
             ) : (
@@ -304,7 +305,7 @@ export function AnniversaryReminderSection() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   entryRow: { alignItems: 'center', backgroundColor: '#fff8f5', borderColor: '#f5c6ce', borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 12, marginBottom: 10, padding: 14, shadowColor: '#2d1f2e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
   iconBadge: { alignItems: 'center', backgroundColor: '#fdf6f0', borderRadius: 12, height: 48, justifyContent: 'center', width: 48 },
   iconText: { color: '#e8607a', fontSize: 22, fontWeight: '900' },

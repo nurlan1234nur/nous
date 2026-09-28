@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import type { Member, Milestone } from '../types';
+import { themedStyles, colors } from '../theme';
 
 interface TimelineItem {
   id: string;
@@ -230,7 +231,7 @@ export function TimelineScreen() {
 
       {loading || coupleLoading ? (
         <View style={styles.loading}>
-          <ActivityIndicator color="#e8607a" />
+          <ActivityIndicator color={colors.rose} />
         </View>
       ) : (
         <FlatList
@@ -260,7 +261,7 @@ export function TimelineScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   screen: {
     backgroundColor: '#fdf6f0',
     flex: 1,

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCouple } from '../context/CoupleContext';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
 import type { BattleshipGame, BattleshipShot } from '../types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { themedStyles, colors } from '../theme';
 
 type Cell = { x: number; y: number };
 type Rotation = 0 | 90 | 180 | 270;
@@ -184,7 +185,7 @@ export function BattleshipSection() {
           <ScrollView contentContainerStyle={styles.content}>
             {error ? <Text style={styles.error}>{error}</Text> : null}
             {loading || !game ? (
-              <ActivityIndicator color="#e8607a" style={styles.loading} />
+              <ActivityIndicator color={colors.rose} style={styles.loading} />
             ) : game.status === 'placement' ? (
               <>
                 <View style={styles.card}>
@@ -325,7 +326,7 @@ function BattleBoard({ interactive, onSelect, planeCells = [], selected, shots }
   );
 }
 
-const styles = StyleSheet.create({
+const styles = themedStyles({
   entryRow: { alignItems: 'center', backgroundColor: '#fff8f5', borderColor: '#f5c6ce', borderRadius: 16, borderWidth: 1, flexDirection: 'row', gap: 12, marginBottom: 10, padding: 14, shadowColor: '#2d1f2e', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 12, elevation: 2 },
   iconBadge: { alignItems: 'center', backgroundColor: '#fdf6f0', borderRadius: 12, height: 48, justifyContent: 'center', width: 48 },
   iconText: { color: '#e8607a', fontSize: 22, fontWeight: '900' },
