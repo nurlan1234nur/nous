@@ -1,6 +1,8 @@
 // Backend API client. Token-ийг localStorage-д хадгална.
 const TOKEN_KEY = 'nous-token';
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '') ?? '';
+// Дэд замаар (/nous/) байршуулсан үед API/uploads/socket.io бүгд тэр угтвартай явна.
+export const BASE_PREFIX = import.meta.env.BASE_URL.replace(/\/$/, '');
+const API_ORIGIN = import.meta.env.VITE_API_ORIGIN?.replace(/\/$/, '') ?? BASE_PREFIX;
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -48,7 +50,7 @@ export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
 }
 
 // Server-ийн статик зам (/uploads/...) — same-origin тул шууд буцаана.
-const ASSET_ORIGIN = import.meta.env.VITE_ASSET_ORIGIN?.replace(/\/$/, '') ?? '';
+const ASSET_ORIGIN = import.meta.env.VITE_ASSET_ORIGIN?.replace(/\/$/, '') ?? BASE_PREFIX;
 
 // Зураг (/uploads) нь нэвтрэлттэй — server-ээс авсан media token-ийг URL-д залгана.
 // AuthContext хэрэглэгч солигдох бүрд шинэчилнэ.

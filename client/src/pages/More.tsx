@@ -420,7 +420,7 @@ export default function More() {
           Гарах
         </button>
         <div className="mt-2 flex justify-center gap-5 py-2 text-xs text-muted">
-          <a href="/privacy.html" target="_blank" rel="noreferrer" className="underline">
+          <a href={`${import.meta.env.BASE_URL}privacy.html`} target="_blank" rel="noreferrer" className="underline">
             Нууцлалын бодлого
           </a>
           <button onClick={() => setDeleteOpen(true)} className="underline">

@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# Дэд замаар байршуулах бол: --build-arg VITE_BASE=/nous/  (default '/')
+ARG VITE_BASE=/
+ENV VITE_BASE=$VITE_BASE
 RUN npm run build
 
 # ---- runtime stage (nginx static + reverse proxy) ----

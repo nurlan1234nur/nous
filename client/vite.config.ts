@@ -6,6 +6,8 @@ import { cloudflare } from "@cloudflare/vite-plugin";
 
 // https://vite.dev/config/
 export default defineConfig({
+  // /nous/ гэх мэт дэд замаар байршуулах бол VITE_BASE=/nous/ гэж build хийнэ (default: '/').
+  base: process.env.VITE_BASE || '/',
   plugins: [react(), tailwindcss(), cloudflare()],
   server: {
     proxy: {

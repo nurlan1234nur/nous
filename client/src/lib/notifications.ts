@@ -30,7 +30,7 @@ export async function enableNotifications(): Promise<void> {
   if (!config.enabled || !config.publicKey) throw new Error('Server notification тохируулагдаагүй байна');
 
   let registration = await navigator.serviceWorker.getRegistration();
-  if (!registration) registration = await navigator.serviceWorker.register('/sw.js');
+  if (!registration) registration = await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL });
   const subscription =
     (await registration.pushManager.getSubscription()) ??
     (await registration.pushManager.subscribe({

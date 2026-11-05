@@ -94,6 +94,8 @@ jobs:
         with:
           context: ./client
           push: true
+          build-args: |
+            VITE_BASE=/nous/
           tags: |
             ${{ env.DOCKERHUB_NAMESPACE }}/${{ env.CLIENT_IMAGE }}:latest
             ${{ env.DOCKERHUB_NAMESPACE }}/${{ env.CLIENT_IMAGE }}:${{ github.sha }}
@@ -134,7 +136,7 @@ jobs:
             fi
             export VERSION=${{ github.sha }}
             export NOUS_HTTP_PORT=8300
-            export CLIENT_ORIGIN=http://${{ secrets.SERVER_HOST }}:8300
+            export CLIENT_ORIGIN=http://${{ secrets.SERVER_HOST }}:8300,http://${{ secrets.SERVER_HOST }}
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
             for attempt in $(seq 1 30); do

@@ -22,7 +22,9 @@ services:
       MONGODB_URI: mongodb://mongo:27017/nous
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       JWT_EXPIRES_IN: 7d
-      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://116.206.83.75:8300}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://116.206.83.75:8300,http://116.206.83.75}
+      # client nginx + gateway nginx (/nous/) = 2 proxy hop
+      TRUST_PROXY: ${TRUST_PROXY:-2}
       # Production-д OTP кодыг API хариунд буцаахгүй тул бүртгэл/нууц үг сэргээхэд Gmail заавал хэрэгтэй.
       GMAIL_USER: ${GMAIL_USER:-}
       GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
