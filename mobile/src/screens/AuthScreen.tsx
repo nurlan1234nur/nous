@@ -290,7 +290,7 @@ export function AuthScreen() {
               editable={!busy}
               keyboardType="email-address"
               onChangeText={setRegisterEmail}
-              placeholder="your@gmail.com"
+              placeholder="name@gmail.com"
               placeholderTextColor="#9b8a93"
               style={styles.input}
               value={registerEmail}

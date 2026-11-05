@@ -181,7 +181,7 @@ export default function AuthPage() {
         {screen === 'login' && (
           <form onSubmit={submitLogin} className="space-y-3">
             <Field
-              placeholder="Нэр (жишээ: aysu)"
+              placeholder="Нэр"
               autoCapitalize="none"
               value={loginUser}
               onChange={(e) => setLoginUser(e.target.value)}
@@ -214,7 +214,7 @@ export default function AuthPage() {
             </p>
             <Field
               type="email"
-              placeholder="жишээ@gmail.com"
+              placeholder="name@gmail.com"
               autoCapitalize="none"
               value={regEmail}
               onChange={(e) => setRegEmail(e.target.value)}
@@ -234,7 +234,7 @@ export default function AuthPage() {
             </p>
             <CodeField placeholder="••••••" value={regCode} onChange={(e) => setRegCode(e.target.value.replace(/\D/g, ''))} required />
             <Field
-              placeholder="Нэр сонгох (жишээ: aysu)"
+              placeholder="Нэр сонгох"
               autoCapitalize="none"
               value={regUser}
               onChange={(e) => setRegUser(e.target.value)}
@@ -279,7 +279,7 @@ export default function AuthPage() {
               Нэрээ оруулна уу — холбоотой Gmail руу код илгээнэ.
             </p>
             <Field
-              placeholder="Нэр (жишээ: aysu)"
+              placeholder="Нэр"
               autoCapitalize="none"
               value={fgUser}
               onChange={(e) => setFgUser(e.target.value)}
